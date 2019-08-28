@@ -42,21 +42,19 @@
         visibilityChange = 'webkitvisibilitychange';
         state = 'webkitVisibilityState';
     }
-    let docText = doc.title;
+    //let docText = doc.title;
     // 添加监听器，在title里显示状态变化
-    doc.addEventListener(visibilityChange, function () {
-        if (doc[state] === 'visible') {
-            doc.title = '欢迎回来！d(`･∀･)b 👏';
-            status = setTimeout(() => {
-                doc.title = docText;
-            }, 1000);
-        } else {
-            doc.title = '藏起来了d(`x_x)b';
-            if (status) {
-                clearTimeout(status);
-            }
-        }
-    }, false);
-    // 初始化页面状态
-    // doc.title = '吕钒的后花园';
+    // doc.addEventListener(visibilityChange, function () {
+    //     if (doc[state] === 'visible') {
+    //         doc.title = '欢迎回来！d(`･∀･)b 👏';
+    //         status = setTimeout(() => {
+    //             doc.title = docText;
+    //         }, 1000);
+    //     } else {
+    //         doc.title = '藏起来了d(`x_x)b';
+    //         if (status) {
+    //             clearTimeout(status);
+    //         }
+    //     }
+    // }, false);
 }());
