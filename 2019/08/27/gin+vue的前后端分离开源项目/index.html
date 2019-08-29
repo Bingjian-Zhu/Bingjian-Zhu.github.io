@@ -14,25 +14,25 @@
 <meta property="og:url" content="http://yoursite.com/2019/08/27/gin+vue的前后端分离开源项目/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http://yoursite.com/images/gin/1.1.gif">
-<meta property="og:image" content="http://yoursite.com/images/gin/1.2.png">
-<meta property="og:image" content="http://yoursite.com/images/gin/1.3.png">
-<meta property="og:image" content="http://yoursite.com/images/gin/1.4.png">
-<meta property="og:image" content="http://yoursite.com/images/gin/1.5.png">
-<meta property="og:image" content="http://yoursite.com/images/gin/1.6.gif">
-<meta property="og:image" content="http://yoursite.com/images/gin/1.7.gif">
-<meta property="og:image" content="http://yoursite.com/images/gin/1.8.gif">
-<meta property="og:image" content="http://yoursite.com/images/gin/1.9.png">
-<meta property="og:image" content="http://yoursite.com/images/gin/1.10.png">
-<meta property="og:updated_time" content="2019-08-29T09:29:43.355Z">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/1.gif">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/2.png">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/3.png">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/4.png">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/5.png">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/6.gif">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/7.gif">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/8.gif">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/9.png">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/10.png">
+<meta property="og:updated_time" content="2019-08-29T11:39:18.641Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="gin+vue的前后端分离开源项目">
-<meta name="twitter:image" content="http://yoursite.com/images/gin/1.1.gif">
+<meta name="twitter:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/1.gif">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
   
-    <link rel="icon" href="/images/favicon.ico">
+    <link rel="icon" href="http://pwzr2sh3s.bkt.clouddn.com/favicon.ico">
   
   <link rel="stylesheet" type="text/css" href="/./main.0cf68a.css">
   <style type="text/css">
@@ -56,7 +56,7 @@
 <div class="intrude-less">
 	<header id="header" class="inner">
 		<a href="/" class="profilepic">
-			<img src="/images/avatar.png" class="js-avatar">
+			<img src="http://pwzr2sh3s.bkt.clouddn.com/avatar.png" class="js-avatar">
 		</a>
 		<hgroup>
 		  <h1 class="header-author"><a href="/">烟花易冷</a></h1>
@@ -112,7 +112,7 @@
 	<div class="intrude-less">
 		<header id="header" class="inner">
 			<div class="profilepic">
-				<img src="/images/avatar.png" class="js-avatar">
+				<img src="http://pwzr2sh3s.bkt.clouddn.com/avatar.png" class="js-avatar">
 			</div>
 			<hgroup>
 			  <h1 class="header-author js-header-author">烟花易冷</h1>
@@ -180,40 +180,18 @@
     <div class="article-entry" itemprop="articleBody">
       
         <hr>
-<img src="/images/gin/1.1.gif">
+<p><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/1.gif" alt></p>
 <a id="more"></a>
 <p>该项目是gin+vue的前后端分离项目，使用gorm访问MySQL，其中vue前端是使用<a href="https://panjiachen.github.io/vue-element-admin-site/" target="_blank" rel="noopener">vue-element-admin</a>框架简单实现的；<br>go后台使用jwt，对API接口进行权限控制。此外，Web页面在token过期后的半个小时内，用户再次操作会自动刷新token；<br>项目很小，适合gin新手学习！（后续有时间会补上相关教程）</p>
 <p>GitHub地址：<a href="https://github.com/Bingjian-Zhu/gin-vue" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/gin-vue</a></p>
-<hr>
-<h3 id="一、运行go后台项目"><a href="#一、运行go后台项目" class="headerlink" title="一、运行go后台项目"></a>一、运行go后台项目</h3><p>（1）克隆项目<br>把项目clone到GOPATH/src目录下# </p>
-<img src="/images/gin/1.2.png">
-
-<p>（2）建立数据库<br>在MySQL中新建blog数据库，运行文件夹/docs/sql中的mysql.sql脚本#<br>（3）修改数据库配置<br>在文件夹/conf中修改配置文件api.ini中的数据库连接配置#</p>
-<img src="/images/gin/1.3.png">
-<p>（4）运行项目<br>在gin-vue目录下运行：<code>go run main.go</code></p>
-<img src="/images/gin/1.4.png">
-
-<p>（5）可能遇到的问题#</p>
+<h3 id="一、运行go后台项目"><a href="#一、运行go后台项目" class="headerlink" title="一、运行go后台项目"></a>一、运行go后台项目</h3><p>（1）克隆项目<br>把项目clone到GOPATH/src目录下#<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/2.png" alt></p>
+<p>（2）建立数据库<br>在MySQL中新建blog数据库，运行文件夹/docs/sql中的mysql.sql脚本<br>（3）修改数据库配置<br>在文件夹/conf中修改配置文件api.ini中的数据库连接配置<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/3.png" alt><br>（4）运行项目<br>在gin-vue目录下运行：<code>go run main.go</code><br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/4.png" alt></p>
+<p>（5）可能遇到的问题</p>
 <blockquote>
 <p>如果在GitHub是用下载压缩包的形式，解压后请把文件夹gin-vue-master重名为gin-vue，然后再复制到/GOPATH/src目录下</p>
 </blockquote>
-<hr>
-<h3 id="二、使用Postman测试API接口"><a href="#二、使用Postman测试API接口" class="headerlink" title="二、使用Postman测试API接口"></a>二、使用Postman测试API接口</h3><p>（1）登录<br>token过期时间设为5分钟</p>
-<img src="/images/gin/1.5.png">
-<p>（2）测试接口<br>使用token调用API接口</p>
-<img src="/images/gin/1.6.gif">
-<p>（3）API权限验证<br>当使用admin登录获取的token调用/api/v1/table/list接口时，能获取到数据<br>改用test用户登录获取的token调用/api/v1/table/list接口时，返回403，没有权限</p>
-<img src="/images/gin/1.7.gif">
-<p>（4）刷新token</p>
-<img src="/images/gin/1.8.gif">
-<p>（5）查看接口运行的时间</p>
-<img src="/images/gin/1.9.png">
-
-<hr>
-<h3 id="三、运行vue-admin项目"><a href="#三、运行vue-admin项目" class="headerlink" title="三、运行vue-admin项目"></a>三、运行vue-admin项目</h3><p>（1）初始化项目<br>在/gin-vue/vue-admin目录下运行：<code>npm install</code><br>（2）运行项目<br>运行：<code>npm run dev</code></p>
-<img src="/images/gin/1.10.png">
-<p>浏览器自动打开 <a href="http://localhost:9528/#/login?redirect=%2Fdashboard" target="_blank" rel="noopener">http://localhost:9528/#/login?redirect=%2Fdashboard</a><br>然后就可以像文章开头的动图一样玩了</p>
-<hr>
+<h3 id="二、使用Postman测试API接口"><a href="#二、使用Postman测试API接口" class="headerlink" title="二、使用Postman测试API接口"></a>二、使用Postman测试API接口</h3><p>（1）登录<br>token过期时间设为5分钟<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/5.png" alt><br>（2）测试接口<br>使用token调用API接口<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/6.gif" alt><br>（3）API权限验证<br>当使用admin登录获取的token调用/api/v1/table/list接口时，能获取到数据<br>改用test用户登录获取的token调用/api/v1/table/list接口时，返回403，没有权限<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/7.gif" alt><br>（4）刷新token<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/8.gif" alt><br>（5）查看接口运行的时间<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/9.png" alt></p>
+<h3 id="三、运行vue-admin项目"><a href="#三、运行vue-admin项目" class="headerlink" title="三、运行vue-admin项目"></a>三、运行vue-admin项目</h3><p>（1）初始化项目<br>在/gin-vue/vue-admin目录下运行：<code>npm install</code><br>（2）运行项目<br>运行：<code>npm run dev</code><br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/10.png" alt><br>浏览器自动打开 <a href="http://localhost:9528/#/login?redirect=%2Fdashboard" target="_blank" rel="noopener">http://localhost:9528/#/login?redirect=%2Fdashboard</a><br>然后就可以像文章开头的动图一样玩了</p>
 <h3 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h3><p>初步体验了gin框架，总体上还是可以的</p>
 <blockquote>
 <p>再次附上源码地址：<a href="https://github.com/Bingjian-Zhu/gin-vue" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/gin-vue</a><br>喜欢的请star</p>
@@ -234,6 +212,16 @@
                   <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
                   <div class="reward-box">
                     
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/alipay.JPG">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/wechatpay.JPG">
+                      <span class="reward-type">微信</span>
+                    </div>
                     
                   </div>
                 </span>
@@ -566,7 +554,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
     
     	<section class="tools-section tools-section-me" q-show="aboutme">
   	  	
-  	  		<div class="aboutme-wrap" id="js-aboutme">毕业于华农&lt;br&gt;计算机科学与技术&lt;br/&gt;&lt;br&gt;从事服务端开发&lt;br/&gt;</div>
+  	  		<div class="aboutme-wrap" id="js-aboutme">毕业于华农&lt;br&gt;计算机科学与技术&lt;br/&gt;&lt;br&gt;现C#服务端开发一枚&lt;br/&gt;</div>
   	  	
     	</section>
     
