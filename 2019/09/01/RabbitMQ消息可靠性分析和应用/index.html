@@ -6,15 +6,22 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: .NET Core | 烟花易冷的博客</title>
+  <title>RabbitMQ消息可靠性分析和应用 | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="烟花易冷的博客">
-<meta property="og:url" content="http://yoursite.com/tags/NET-Core/index.html">
+  <meta name="description" content="一、RabbitMQ流程简介（带Exchange）RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。">
+<meta name="keywords" content="RabbitMQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ消息可靠性分析和应用">
+<meta property="og:url" content="http://yoursite.com/2019/09/01/RabbitMQ消息可靠性分析和应用/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
+<meta property="og:description" content="一、RabbitMQ流程简介（带Exchange）RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。">
 <meta property="og:locale" content="en">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png">
+<meta property="og:updated_time" content="2019-09-02T01:54:56.610Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="烟花易冷的博客">
+<meta name="twitter:title" content="RabbitMQ消息可靠性分析和应用">
+<meta name="twitter:description" content="一、RabbitMQ流程简介（带Exchange）RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。">
+<meta name="twitter:image" content="http://pwzr2sh3s.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -152,64 +159,286 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-RabbitMQ消息可靠性分析和应用" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/08/28/使用Docker部署NET-Core程序/" class="archive-article-date">
-  	<time datetime="2019-08-28T15:15:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-28</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/08/28/使用Docker部署NET-Core程序/">使用Docker部署.NET Core程序</a>
+    <h1 class="article-title" itemprop="name">
+      RabbitMQ消息可靠性分析和应用
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/09/01/RabbitMQ消息可靠性分析和应用/" class="archive-article-date">
+  	<time datetime="2019-09-01T15:16:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="一、RabbitMQ流程简介（带Exchange）"><a href="#一、RabbitMQ流程简介（带Exchange）" class="headerlink" title="一、RabbitMQ流程简介（带Exchange）"></a>一、RabbitMQ流程简介（带Exchange）</h3><p>RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。</p>
+<a id="more"></a>
+<p>先看以下这个图：<br><img src="http://pwzr2sh3s.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png" alt><br>P为生产者，X为中转站（Exchange），红色部分为消息队列，C1、C2为消费者。</p>
+<p>整个流程分成三部分：第一，生产者生产消息，发送到中转站；第二，中转站按定义的规则转发消息到消息队列；第三，消费者从消息队列获取消息进行消费（处理）。</p>
+<hr>
+<h3 id="二、发布确认"><a href="#二、发布确认" class="headerlink" title="二、发布确认"></a>二、发布确认</h3><p>生产者生产消息，发送到中转站的过程中，可能会因为网络丢包、网络故障等问题造成消息丢失。为了确保生产者发送的消息不会丢失，RabbitMQ提供了发布确认（Publisher Confirms）机制，从而提高消息的可靠性（注意：发布确认机制不能和事务机制一起使用）。</p>
+<p><strong>单条消息发布确认：</strong></p>
+<pre><code>channel.ConfirmSelect();//发布确认机制
+string message = &quot;msg&quot;;
+var body = Encoding.UTF8.GetBytes(message);
+channel.BasicPublish(
+        exchange: &quot;MarkTopicChange&quot;,
+        routingKey: &quot;MarkRouteKey.one&quot;,
+        basicProperties: null,
+        body: body
+        );
+bool isPublished = channel.WaitForConfirms();//通道（channel）里消息发送成功返回true</code></pre><p>使用channel.ConfirmSelect，一旦信道进入确认模式，所有在该信道上面发布的消息都会被指派一个唯一的ID（从1开始）。消息被投递到所有匹配的队列之后，RabbitMQ就会发送（Basic.Ack）给生产者（包含消息的唯一ID），生产者从而知道消息发送成功。</p>
+<p><strong>多条消息发布确认：</strong></p>
+<pre><code>channel.ConfirmSelect();//发布确认机制
+ foreach (var itemMsg in lstMsg)
+ {
+     byte[] sendBytes = Encoding.UTF8.GetBytes(itemMsg);
+     //发布消息
+     channel.BasicPublish(
+         exchange: &quot;MarkTopicChange&quot;,
+         routingKey: &quot;MarkRouteKey.one&quot;,
+         basicProperties: null,
+         body: sendBytes
+         );
+ }
+ bool isAllPublished = channel.WaitForConfirms();//通道（channel）里所有消息均发送才返回true</code></pre><p>注意：多消息发布确认机制情况下，倘若要发送100条消息，发送90条后，突然网络故障，后面的消息发送失败了，那么isAllPublished返回的是false，而前面90条消息已经发送到消息队列了。我们还不知道哪些消息是发送失败的，所以很多条消息发布确认，建议分几次发送或多通道发送。</p>
+<p>此外，需要确保在中转站（Exchange）的消息可以顺利到达消息队列。<br>（1）首先需要定义匹配的Exchange和Queue，根据Exchange的类型和routingKey确定转发的关系。<br>（2）确保消息队列有足够内存存储消息。</p>
+<blockquote>
+<p> RabbitMQ默认配置<code>vm_memory_high_watermark</code>为0.4。意思是控制消息占40%内存左右。<code>vm_memory_high_watermark_paging_ratio</code>为0.5，当消息占用内存超过50%，RabbitMQ会把消息转移到磁盘上以释放内存。当磁盘剩余空间小于阀值disk_free_limit（默认为50M），所有生产者阻塞，避免充满磁盘，导致所有的写操作失败。</p>
+</blockquote>
+<blockquote>
+<p>RabbitMQ配置文件一般在<code>%APPDATA%\RabbitMQ\rabbitmq.config</code><br>%APPDATA% 一般为 <code>C:\Users\%USERNAME%\AppData\Roaming</code>（Windows环境）</p>
+</blockquote>
+<hr>
+<h3 id="三、持久化"><a href="#三、持久化" class="headerlink" title="三、持久化"></a>三、持久化</h3><p> 消息存放到消息队列后，在不配置消息持久化的情况下，若服务器重启、关闭或宕机等，消息都会丢失。配置持久化可以有效提高消息的可靠性。持久化需要同时配置消息持久化和队列持久化。单配置消息持久化，队列消失了，消息没有地方存放；单配置队列持久化，队列还在，消息没了。</p>
+<p>队列持久化在定义队列时候配置</p>
+<pre><code>//定义队列
+channel.QueueDeclare(
+    queue: &quot;Mark_Queue&quot;, //队列名称
+    durable: true, //队列磁盘持久化                   
+    exclusive: false,//是否排他的，false。如果一个队列声明为排他队列，该队列首次声明它的连接可见，并在连接断开时自动删除
+    autoDelete: false,//是否自动删除，一般设成false
+    arguments: null
+    );</code></pre><p>消息持久化在发布消息时候配置</p>
+<pre><code>//消息持久化，把DeliveryMode设成2
+IBasicProperties properties = channel.CreateBasicProperties();
+properties.DeliveryMode = 2;
+    //发布消息
+    channel.BasicPublish(
+        exchange: &quot;MarkTopicChange&quot;,
+        routingKey: &quot;MarkRouteKey.one&quot;,
+        basicProperties: properties,
+        body: sendBytes
+        );</code></pre><p> 如何配置了事务机制或发布确认（publisher confirm）机制，服务端的返回Basic.Ack是在消息落盘之后执行的，进一步的提高了消息的可靠性。<br>为了防止磁盘损坏带来的消息丢失，可以配置镜像队列，这里不作介绍。</p>
+<hr>
+<h3 id="四、消费确认"><a href="#四、消费确认" class="headerlink" title="四、消费确认"></a>四、消费确认</h3><p> 为了确保消息被消费者消费，RabbitMQ提供消费确认模式（consumer Acknowledgements）。自动确认模式，当消费者成功接收到消息后，自动通知RabbitMQ，把消息队列中相应消息删除。这很大程度上满足不了我们，假如消费者接收到消息后，服务器宕机，消息还没处理完成，这样就会造成消息丢失。手动确认模式，当消费者成功处理完消息后，手动发消息通知RabbitMQ，把消息队列中相应消息删除。</p>
+<pre><code>consumer.Received += (model, ea) =&gt;
+{
+    var body = ea.Body;
+    var message = Encoding.UTF8.GetString(body);
+    var routingKey = ea.RoutingKey;
+    Console.WriteLine(&quot; [x] Received &apos;{0}&apos;:&apos;{1}&apos;&quot;,
+                      routingKey,
+                      message);
+
+//确认该消息已被消费,发删除消息给RabbitMQ，把消息队列中的消息删除 
+channel.BasicAck(ea.DeliveryTag, false);
+//消费消息失败，拒绝此消息，重回队列，让它可以继续发送到其他消费者 
+//channel.BasicReject(ea.DeliveryTag, true);
+//消费消息失败，拒绝多条消息，重回队列，让它们可以继续发送到其他消费者 
+//channel.BasicNack(ea.DeliveryTag, true, true);
+};
+//手动确认消息，把autoAck设成false
+channel.BasicConsume(queue: &quot;Mark_Queue&quot;,
+                     autoAck: false,
+                     consumer: consumer);</code></pre><p>这里值得注意的是，消息处理完成后，一定要把处理完成的消息发送到RabbitMQ<code>channel.BasicAck(ea.DeliveryTag, false)</code>，不然RabbitMQ会一直等待，从而造成内存泄露。若处理消息过程中发生异常，可以使用<code>channel.BasicReject(ea.DeliveryTag, true)</code>来拒绝此消息，让它重回队列。若RabbitMQ收不到消费者任何确认消息的信号（包括确认信号，拒绝信号灯），直到此消费者断开连接，消息才能重回队列，继续发送到其他消费者。<br>提醒一下，假如消费者消费消息的方法不支持并发（取决于需求），可以限制消费者每次只接收一条消息。</p>
+<pre><code>channel.BasicQos(0, 1, false);</code></pre>
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/alipay.JPG">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/wechatpay.JPG">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">docker</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">.NET Core</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/01/RabbitMQ消息可靠性分析和应用/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2019/09/01/RabbitMQ教程（译）-RPC/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">RabbitMQ教程（译）-RPC</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一、RabbitMQ流程简介（带Exchange）"><span class="toc-number">1.</span> <span class="toc-text">一、RabbitMQ流程简介（带Exchange）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二、发布确认"><span class="toc-number">2.</span> <span class="toc-text">二、发布确认</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三、持久化"><span class="toc-number">3.</span> <span class="toc-text">三、持久化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四、消费确认"><span class="toc-number">4.</span> <span class="toc-text">四、消费确认</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+<script src="https://billts.site/js/gitment.js"></script>
+<script>
+var gitment = new Gitment({
+  id: 'Sun Sep 01 2019 23:16:03 GMT+0800',
+  owner: 'Bingjian-Zhu',
+  repo: 'Bingjian-Zhu.github.io',
+  oauth: {
+    client_id: 'ea0e7d1f85b69731c83e',
+    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
+  
 
 
           </div>
@@ -232,9 +461,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

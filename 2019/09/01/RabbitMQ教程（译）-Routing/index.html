@@ -6,15 +6,24 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: .NET Core | 烟花易冷的博客</title>
+  <title>RabbitMQ教程（译）-Routing | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="烟花易冷的博客">
-<meta property="og:url" content="http://yoursite.com/tags/NET-Core/index.html">
+  <meta name="description" content="路由(Routing)（使用Go客户端）">
+<meta name="keywords" content="RabbitMQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ教程（译）-Routing">
+<meta property="og:url" content="http://yoursite.com/2019/09/01/RabbitMQ教程（译）-Routing/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
+<meta property="og:description" content="路由(Routing)（使用Go客户端）">
 <meta property="og:locale" content="en">
+<meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/direct-exchange.png">
+<meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/direct-exchange-multiple.png">
+<meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/python-four.png">
+<meta property="og:updated_time" content="2019-09-03T02:03:16.392Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="烟花易冷的博客">
+<meta name="twitter:title" content="RabbitMQ教程（译）-Routing">
+<meta name="twitter:description" content="路由(Routing)（使用Go客户端）">
+<meta name="twitter:image" content="http://www.rabbitmq.com/img/tutorials/direct-exchange.png">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -152,64 +161,263 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-RabbitMQ教程（译）-Routing" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/08/28/使用Docker部署NET-Core程序/" class="archive-article-date">
-  	<time datetime="2019-08-28T15:15:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-28</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/08/28/使用Docker部署NET-Core程序/">使用Docker部署.NET Core程序</a>
+    <h1 class="article-title" itemprop="name">
+      RabbitMQ教程（译）-Routing
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/09/01/RabbitMQ教程（译）-Routing/" class="archive-article-date">
+  	<time datetime="2019-09-01T03:05:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="路由-Routing"><a href="#路由-Routing" class="headerlink" title="路由(Routing)"></a>路由(Routing)</h2><p><strong>（使用Go客户端）</strong></p>
+<a id="more"></a>
+
+<p>在前面的教程中，我们实现了一个简单的日志系统。可以把日志消息广播给多个接收者。</p>
+<p>本篇教程中我们打算新增一个功能 —— 使得它能够只订阅消息的一个字集。例如，我们只需要把严重的错误日志信息写入日志文件（存储到磁盘），但同时仍然把所有的日志信息输出到控制台中</p>
+<h2 id="绑定（Bindings）"><a href="#绑定（Bindings）" class="headerlink" title="绑定（Bindings）"></a>绑定（Bindings）</h2><p>前面的例子，我们已经创建过绑定（bindings），代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">err = ch.QueueBind(</span><br><span class="line">  q.Name, <span class="comment">// queue name</span></span><br><span class="line">  <span class="string">""</span>,     <span class="comment">// routing key</span></span><br><span class="line">  <span class="string">"logs"</span>, <span class="comment">// exchange</span></span><br><span class="line">  <span class="literal">false</span>,</span><br><span class="line">  <span class="literal">nil</span>)</span><br></pre></td></tr></table></figure>
+
+<p>绑定（binding）是指交换机（exchange）和队列（queue）的关系。可以简单理解为：这个队列（queue）对这个交换机（exchange）的消息感兴趣。</p>
+<p>绑定的时候可以带上一个额外的routing_key参数。为了避免与<code>Channel.Publish</code>的参数混淆，我们把它叫做绑定键<code>binding key</code>。以下是如何创建一个带绑定键的绑定。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">err = ch.QueueBind(</span><br><span class="line">  q.Name,    <span class="comment">// queue name</span></span><br><span class="line">  <span class="string">"black"</span>,   <span class="comment">// routing key</span></span><br><span class="line">  <span class="string">"logs"</span>,    <span class="comment">// exchange</span></span><br><span class="line">  <span class="literal">false</span>,</span><br><span class="line">  <span class="literal">nil</span>)</span><br></pre></td></tr></table></figure>
+
+<p>绑定键的意义取决于交换机（exchange）的类型。我们之前使用过<code>fanout</code> 交换机会忽略这个值。</p>
+<h2 id="直连交换机（Direct-exchange）"><a href="#直连交换机（Direct-exchange）" class="headerlink" title="直连交换机（Direct exchange）"></a>直连交换机（Direct exchange）</h2><p>我们的日志系统广播所有的消息给所有的消费者（consumers）。我们打算扩展它，使其基于日志的严重程度进行消息过滤。例如我们也许只是希望将比较严重的错误（error）日志写入磁盘，以免在警告（warning）或者信息（info）日志上浪费磁盘空间。</p>
+<p>我们使用的<code>fanout</code> 交换机没有足够的灵活性 —— 它能做的仅仅是广播。</p>
+<p>我们将会使用<code>direct</code> 交换机来代替。路由的算法很简单 —— 交换机将会对<code>binding key</code>和<code>routing key</code>进行精确匹配，从而确定消息该分发到哪个队列。</p>
+<p>下图能够很好的描述这个场景：</p>
+<p><img src="http://www.rabbitmq.com/img/tutorials/direct-exchange.png" alt></p>
+<p>在这个场景中，我们可以看到直连交换机 X和两个队列进行了绑定。第一个队列使用orange作为绑定键，第二个队列有两个绑定，一个使用black作为绑定键，另外一个使用green。</p>
+<p>这样以来，当路由键为orange的消息发布到交换机，就会被路由到队列Q1。路由键为black或者green的消息就会路由到Q2。其他的所有消息都将会被丢弃。</p>
+<h2 id="多个绑定（Multiple-bindings）"><a href="#多个绑定（Multiple-bindings）" class="headerlink" title="多个绑定（Multiple bindings）"></a>多个绑定（Multiple bindings）</h2><p><img src="http://www.rabbitmq.com/img/tutorials/direct-exchange-multiple.png" alt></p>
+<p>多个队列使用相同的绑定键是合法的。这个例子中，我们可以添加一个X和Q1之间的绑定，使用black绑定键。这样一来，直连交换机就和扇型交换机的行为一样，会将消息广播到所有匹配的队列。带有black路由键的消息会同时发送到Q1和Q2。</p>
+<h2 id="发送日志"><a href="#发送日志" class="headerlink" title="发送日志"></a>发送日志</h2><p>我们将会发送消息到一个<code>fanout</code>，把日志等级作为<code>routing key</code>。这样接收日志就可以根据日志级别来选择它想要处理的日志。我们先看看发送日志。</p>
+<p>我们需要创建一个交换机（exchange）：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">err = ch.ExchangeDeclare(</span><br><span class="line">  <span class="string">"logs_direct"</span>, <span class="comment">// name</span></span><br><span class="line">  <span class="string">"direct"</span>,      <span class="comment">// type</span></span><br><span class="line">  <span class="literal">true</span>,          <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>,         <span class="comment">// auto-deleted</span></span><br><span class="line">  <span class="literal">false</span>,         <span class="comment">// internal</span></span><br><span class="line">  <span class="literal">false</span>,         <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,           <span class="comment">// arguments</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>然后我们发送一则消息：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">err = ch.ExchangeDeclare(</span><br><span class="line">  <span class="string">"logs_direct"</span>, <span class="comment">// name</span></span><br><span class="line">  <span class="string">"direct"</span>,      <span class="comment">// type</span></span><br><span class="line">  <span class="literal">true</span>,          <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>,         <span class="comment">// auto-deleted</span></span><br><span class="line">  <span class="literal">false</span>,         <span class="comment">// internal</span></span><br><span class="line">  <span class="literal">false</span>,         <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,           <span class="comment">// arguments</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to declare an exchange"</span>)</span><br><span class="line"></span><br><span class="line">body := bodyFrom(os.Args)</span><br><span class="line">err = ch.Publish(</span><br><span class="line">  <span class="string">"logs_direct"</span>,         <span class="comment">// exchange</span></span><br><span class="line">  severityFrom(os.Args), <span class="comment">// routing key</span></span><br><span class="line">  <span class="literal">false</span>, <span class="comment">// mandatory</span></span><br><span class="line">  <span class="literal">false</span>, <span class="comment">// immediate</span></span><br><span class="line">  amqp.Publishing&#123;</span><br><span class="line">    ContentType: <span class="string">"text/plain"</span>,</span><br><span class="line">    Body:        []<span class="keyword">byte</span>(body),</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>我们先假设“severity”的值是info、warning、error中的一个。</p>
+<h2 id="订阅"><a href="#订阅" class="headerlink" title="订阅"></a>订阅</h2><p>处理接收消息的方式和之前差不多，只有一个例外，我们将会为我们感兴趣的每个严重级别分别创建一个新的绑定。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">q, err := ch.QueueDeclare(</span><br><span class="line">  <span class="string">""</span>,    <span class="comment">// name</span></span><br><span class="line">  <span class="literal">false</span>, <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>, <span class="comment">// delete when usused</span></span><br><span class="line">  <span class="literal">true</span>,  <span class="comment">// exclusive</span></span><br><span class="line">  <span class="literal">false</span>, <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,   <span class="comment">// arguments</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to declare a queue"</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> <span class="built_in">len</span>(os.Args) &lt; <span class="number">2</span> &#123;</span><br><span class="line">  log.Printf(<span class="string">"Usage: %s [info] [warning] [error]"</span>, os.Args[<span class="number">0</span>])</span><br><span class="line">  os.Exit(<span class="number">0</span>)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span> _, s := <span class="keyword">range</span> os.Args[<span class="number">1</span>:] &#123;</span><br><span class="line">  log.Printf(<span class="string">"Binding queue %s to exchange %s with routing key %s"</span>,</span><br><span class="line">     q.Name, <span class="string">"logs_direct"</span>, s)</span><br><span class="line">  err = ch.QueueBind(</span><br><span class="line">    q.Name,        <span class="comment">// queue name</span></span><br><span class="line">    s,             <span class="comment">// routing key</span></span><br><span class="line">    <span class="string">"logs_direct"</span>, <span class="comment">// exchange</span></span><br><span class="line">    <span class="literal">false</span>,</span><br><span class="line">    <span class="literal">nil</span>)</span><br><span class="line">  failOnError(err, <span class="string">"Failed to bind a queue"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="代码整合"><a href="#代码整合" class="headerlink" title="代码整合"></a>代码整合</h2><p><img src="http://www.rabbitmq.com/img/tutorials/python-four.png" alt></p>
+<p>emit_log_direct.go的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">        <span class="string">"log"</span></span><br><span class="line">        <span class="string">"os"</span></span><br><span class="line">        <span class="string">"strings"</span></span><br><span class="line"></span><br><span class="line">        <span class="string">"github.com/streadway/amqp"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">failOnError</span><span class="params">(err error, msg <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">                log.Fatalf(<span class="string">"%s: %s"</span>, msg, err)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">        conn, err := amqp.Dial(<span class="string">"amqp://guest:guest@localhost:5672/"</span>)</span><br><span class="line">        failOnError(err, <span class="string">"Failed to connect to RabbitMQ"</span>)</span><br><span class="line">        <span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">        ch, err := conn.Channel()</span><br><span class="line">        failOnError(err, <span class="string">"Failed to open a channel"</span>)</span><br><span class="line">        <span class="keyword">defer</span> ch.Close()</span><br><span class="line"></span><br><span class="line">        err = ch.ExchangeDeclare(</span><br><span class="line">                <span class="string">"logs_direct"</span>, <span class="comment">// name</span></span><br><span class="line">                <span class="string">"direct"</span>,      <span class="comment">// type</span></span><br><span class="line">                <span class="literal">true</span>,          <span class="comment">// durable</span></span><br><span class="line">                <span class="literal">false</span>,         <span class="comment">// auto-deleted</span></span><br><span class="line">                <span class="literal">false</span>,         <span class="comment">// internal</span></span><br><span class="line">                <span class="literal">false</span>,         <span class="comment">// no-wait</span></span><br><span class="line">                <span class="literal">nil</span>,           <span class="comment">// arguments</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to declare an exchange"</span>)</span><br><span class="line"></span><br><span class="line">        body := bodyFrom(os.Args)</span><br><span class="line">        err = ch.Publish(</span><br><span class="line">                <span class="string">"logs_direct"</span>,         <span class="comment">// exchange</span></span><br><span class="line">                severityFrom(os.Args), <span class="comment">// routing key</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// mandatory</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// immediate</span></span><br><span class="line">                amqp.Publishing&#123;</span><br><span class="line">                        ContentType: <span class="string">"text/plain"</span>,</span><br><span class="line">                        Body:        []<span class="keyword">byte</span>(body),</span><br><span class="line">                &#125;)</span><br><span class="line">        failOnError(err, <span class="string">"Failed to publish a message"</span>)</span><br><span class="line"></span><br><span class="line">        log.Printf(<span class="string">" [x] Sent %s"</span>, body)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">bodyFrom</span><span class="params">(args []<span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">        <span class="keyword">var</span> s <span class="keyword">string</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">len</span>(args) &lt; <span class="number">3</span>) || os.Args[<span class="number">2</span>] == <span class="string">""</span> &#123;</span><br><span class="line">                s = <span class="string">"hello"</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                s = strings.Join(args[<span class="number">2</span>:], <span class="string">" "</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">severityFrom</span><span class="params">(args []<span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">        <span class="keyword">var</span> s <span class="keyword">string</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">len</span>(args) &lt; <span class="number">2</span>) || os.Args[<span class="number">1</span>] == <span class="string">""</span> &#123;</span><br><span class="line">                s = <span class="string">"info"</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                s = os.Args[<span class="number">1</span>]</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>receive_logs_direct.go的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">        <span class="string">"log"</span></span><br><span class="line">        <span class="string">"os"</span></span><br><span class="line"></span><br><span class="line">        <span class="string">"github.com/streadway/amqp"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">failOnError</span><span class="params">(err error, msg <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">                log.Fatalf(<span class="string">"%s: %s"</span>, msg, err)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">        conn, err := amqp.Dial(<span class="string">"amqp://guest:guest@localhost:5672/"</span>)</span><br><span class="line">        failOnError(err, <span class="string">"Failed to connect to RabbitMQ"</span>)</span><br><span class="line">        <span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">        ch, err := conn.Channel()</span><br><span class="line">        failOnError(err, <span class="string">"Failed to open a channel"</span>)</span><br><span class="line">        <span class="keyword">defer</span> ch.Close()</span><br><span class="line"></span><br><span class="line">        err = ch.ExchangeDeclare(</span><br><span class="line">                <span class="string">"logs_direct"</span>, <span class="comment">// name</span></span><br><span class="line">                <span class="string">"direct"</span>,      <span class="comment">// type</span></span><br><span class="line">                <span class="literal">true</span>,          <span class="comment">// durable</span></span><br><span class="line">                <span class="literal">false</span>,         <span class="comment">// auto-deleted</span></span><br><span class="line">                <span class="literal">false</span>,         <span class="comment">// internal</span></span><br><span class="line">                <span class="literal">false</span>,         <span class="comment">// no-wait</span></span><br><span class="line">                <span class="literal">nil</span>,           <span class="comment">// arguments</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to declare an exchange"</span>)</span><br><span class="line"></span><br><span class="line">        q, err := ch.QueueDeclare(</span><br><span class="line">                <span class="string">""</span>,    <span class="comment">// name</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// durable</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// delete when usused</span></span><br><span class="line">                <span class="literal">true</span>,  <span class="comment">// exclusive</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// no-wait</span></span><br><span class="line">                <span class="literal">nil</span>,   <span class="comment">// arguments</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to declare a queue"</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(os.Args) &lt; <span class="number">2</span> &#123;</span><br><span class="line">                log.Printf(<span class="string">"Usage: %s [info] [warning] [error]"</span>, os.Args[<span class="number">0</span>])</span><br><span class="line">                os.Exit(<span class="number">0</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> _, s := <span class="keyword">range</span> os.Args[<span class="number">1</span>:] &#123;</span><br><span class="line">                log.Printf(<span class="string">"Binding queue %s to exchange %s with routing key %s"</span>,</span><br><span class="line">                        q.Name, <span class="string">"logs_direct"</span>, s)</span><br><span class="line">                err = ch.QueueBind(</span><br><span class="line">                        q.Name,        <span class="comment">// queue name</span></span><br><span class="line">                        s,             <span class="comment">// routing key</span></span><br><span class="line">                        <span class="string">"logs_direct"</span>, <span class="comment">// exchange</span></span><br><span class="line">                        <span class="literal">false</span>,</span><br><span class="line">                        <span class="literal">nil</span>)</span><br><span class="line">                failOnError(err, <span class="string">"Failed to bind a queue"</span>)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        msgs, err := ch.Consume(</span><br><span class="line">                q.Name, <span class="comment">// queue</span></span><br><span class="line">                <span class="string">""</span>,     <span class="comment">// consumer</span></span><br><span class="line">                <span class="literal">true</span>,   <span class="comment">// auto ack</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// exclusive</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// no local</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// no wait</span></span><br><span class="line">                <span class="literal">nil</span>,    <span class="comment">// args</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to register a consumer"</span>)</span><br><span class="line"></span><br><span class="line">        forever := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">bool</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">                <span class="keyword">for</span> d := <span class="keyword">range</span> msgs &#123;</span><br><span class="line">                        log.Printf(<span class="string">" [x] %s"</span>, d.Body)</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;()</span><br><span class="line"></span><br><span class="line">        log.Printf(<span class="string">" [*] Waiting for logs. To exit press CTRL+C"</span>)</span><br><span class="line">        &lt;-forever</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果你希望只是保存warning和error级别的日志到磁盘，只需要打开控制台并输入：</p>
+<pre><code>$ go run receive_logs_direct.go warning error &gt; logs_from_rabbit.log</code></pre><p>如果你希望所有的日志信息都输出到屏幕中，打开一个新的终端，然后输入：</p>
+<pre><code>go run receive_logs_direct.go info warning error
+# =&gt; [*] Waiting for logs. To exit press CTRL+C</code></pre><p>如果要触发一个error级别的日志，只需要输入：</p>
+<pre><code>go run emit_log_direct.go error &quot;Run. Run. Or it will explode.&quot;
+# =&gt; [x] Sent &apos;error&apos;:&apos;Run. Run. Or it will explode.&apos;</code></pre><p>这里是完整的代码：(<a href="https://github.com/rabbitmq/rabbitmq-tutorials/blob/master/go/emit_log_direct.go" target="_blank" rel="noopener">emit_log_direct.go</a>和<a href="https://github.com/rabbitmq/rabbitmq-tutorials/blob/master/go/receive_logs_direct.go" target="_blank" rel="noopener">receive_logs_direct.go</a>)</p>
+<blockquote>
+<p>原文：<a href="https://www.rabbitmq.com/tutorials/tutorial-four-go.html" target="_blank" rel="noopener">Routing</a></p>
+</blockquote>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/alipay.JPG">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/wechatpay.JPG">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">docker</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">.NET Core</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/01/RabbitMQ教程（译）-Routing/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+    <a href="/2019/09/01/RabbitMQ教程（译）-Topics/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          RabbitMQ教程（译）-Topics
+        
+      </div>
+    </a>
   
   
-    </div></section>
+    <a href="/2019/09/01/RabbitMQ教程（译）-Publish-Subscribe/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">RabbitMQ教程（译）-Publish/Subscribe</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#路由-Routing"><span class="toc-number">1.</span> <span class="toc-text">路由(Routing)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#绑定（Bindings）"><span class="toc-number">2.</span> <span class="toc-text">绑定（Bindings）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#直连交换机（Direct-exchange）"><span class="toc-number">3.</span> <span class="toc-text">直连交换机（Direct exchange）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#多个绑定（Multiple-bindings）"><span class="toc-number">4.</span> <span class="toc-text">多个绑定（Multiple bindings）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#发送日志"><span class="toc-number">5.</span> <span class="toc-text">发送日志</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#订阅"><span class="toc-number">6.</span> <span class="toc-text">订阅</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码整合"><span class="toc-number">7.</span> <span class="toc-text">代码整合</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+<script src="https://billts.site/js/gitment.js"></script>
+<script>
+var gitment = new Gitment({
+  id: 'Sun Sep 01 2019 11:05:20 GMT+0800',
+  owner: 'Bingjian-Zhu',
+  repo: 'Bingjian-Zhu.github.io',
+  oauth: {
+    client_id: 'ea0e7d1f85b69731c83e',
+    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
+  
 
 
           </div>
@@ -232,9 +440,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

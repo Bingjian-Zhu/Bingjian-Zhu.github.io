@@ -6,15 +6,22 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: .NET Core | 烟花易冷的博客</title>
+  <title>RabbitMQ教程（译）-Topics | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="烟花易冷的博客">
-<meta property="og:url" content="http://yoursite.com/tags/NET-Core/index.html">
+  <meta name="description" content="为什么需要topic交换机？（使用Go客户端）">
+<meta name="keywords" content="RabbitMQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ教程（译）-Topics">
+<meta property="og:url" content="http://yoursite.com/2019/09/01/RabbitMQ教程（译）-Topics/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
+<meta property="og:description" content="为什么需要topic交换机？（使用Go客户端）">
 <meta property="og:locale" content="en">
+<meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/python-five.png">
+<meta property="og:updated_time" content="2019-09-03T02:03:04.692Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="烟花易冷的博客">
+<meta name="twitter:title" content="RabbitMQ教程（译）-Topics">
+<meta name="twitter:description" content="为什么需要topic交换机？（使用Go客户端）">
+<meta name="twitter:image" content="http://www.rabbitmq.com/img/tutorials/python-five.png">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -152,64 +159,266 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-RabbitMQ教程（译）-Topics" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/08/28/使用Docker部署NET-Core程序/" class="archive-article-date">
-  	<time datetime="2019-08-28T15:15:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-28</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/08/28/使用Docker部署NET-Core程序/">使用Docker部署.NET Core程序</a>
+    <h1 class="article-title" itemprop="name">
+      RabbitMQ教程（译）-Topics
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/09/01/RabbitMQ教程（译）-Topics/" class="archive-article-date">
+  	<time datetime="2019-09-01T03:05:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="为什么需要topic交换机？"><a href="#为什么需要topic交换机？" class="headerlink" title="为什么需要topic交换机？"></a>为什么需要topic交换机？</h2><p><strong>（使用Go客户端）</strong></p>
+<a id="more"></a>
+
+<p>上一篇教程，我们改进了我们的日志系统。我们使用<code>direct</code>交换机替代了<code>fanout</code>交换机，从只能盲目的广播消息改进为有可能选择性的接收日志。</p>
+<p>尽管<code>direct</code>交换机能够改善我们的系统，但是它也有它的限制 —— 没办法基于多个标准执行路由操作。</p>
+<p>在我们的日志系统中，我们不只希望订阅基于严重程度的日志，同时还希望订阅基于发送来源的日志。Unix工具<a href="http://en.wikipedia.org/wiki/Syslog" target="_blank" rel="noopener">syslog</a>就是同时基于严重程度-severity (info/warn/crit…) 和 设备-facility (auth/cron/kern…)来路由日志的。</p>
+<p>如果这样的话，将会给予我们非常大的灵活性，我们既可以监听来源于“cron”的严重程度为“critical errors”的日志，也可以监听来源于“kern”的所有日志。</p>
+<p>为了实现这个目的，接下来我们学习如何使用另一种更复杂的交换机 —— topic交换机。</p>
+<h2 id="topic交换机"><a href="#topic交换机" class="headerlink" title="topic交换机"></a>topic交换机</h2><p>发送到<code>topic</code>交换机的消息不可以携带随意<code>routing_key</code>，它的路由键必须是一个由<code>.</code>分隔开的词语列表。这些单词随便是什么都可以，但是最好是跟携带它们的消息有关系的词汇。以下是几个推荐的例子：”stock.usd.nyse”, “nyse.vmw”, “quick.orange.rabbit”。词语的个数可以随意，但是不要超过255字节。</p>
+<p>绑定键也必须拥有同样的格式。主题交换机背后的逻辑跟直连交换机很相似 —— 一个携带着特定路由键的消息会被主题交换机投递给绑定键与之想匹配的队列。但是它的绑定键和路由键有两个特殊应用方式：</p>
+<ul>
+<li><code>*</code> (星号) 用来表示一个单词.</li>
+<li><code>#</code> (井号) 用来表示任意数量（零个或多个）单词。</li>
+</ul>
+<p>下边用图说明：<br><img src="http://www.rabbitmq.com/img/tutorials/python-five.png" alt="None"></p>
+<p>这个例子里，我们发送的所有消息都是用来描述小动物的。发送的消息所携带的路由键是由三个单词所组成的，这三个单词被两个<code>.</code>分割开。路由键里的第一个单词描述的是动物的手脚的利索程度，第二个单词是动物的颜色，第三个是动物的种类。所以它看起来是这样的： <code>&lt;celerity&gt;.&lt;colour&gt;.&lt;species&gt;</code>。</p>
+<p>我们创建了三个绑定：Q1的绑定键为 <code>*.orange.*</code>，Q2的绑定键为 <code>*.*.rabbit</code> 和 <code>lazy.#</code> 。</p>
+<p>这三个绑定键被可以总结为：</p>
+<ul>
+<li>Q1 对<em>所有的桔黄色动物</em>都感兴趣。</li>
+<li>Q2 则是对<em>所有的兔子</em>和<em>所有懒惰的动物</em>感兴趣。</li>
+</ul>
+<p>一个携带有 <code>quick.orange.rabbit</code> 的消息将会被分别投递给这两个队列。携带着 <code>lazy.orange.elephant</code> 的消息同样也会给两个队列都投递过去。另一方面携带有 <code>quick.orange.fox</code> 的消息会投递给第一个队列，携带有 <code>lazy.brown.fox</code> 的消息会投递给第二个队列。携带有 <code>lazy.pink.rabbit</code> 的消息只会被投递给第二个队列一次，即使它同时匹配第二个队列的两个绑定。携带着 <code>quick.brown.fox</code> 的消息不会投递给任何一个队列。</p>
+<p>如果我们违反约定，发送了一个携带有一个单词或者四个单词（<code>&quot;orange&quot;</code> or <code>&quot;quick.orange.male.rabbit&quot;</code>）的消息时，发送的消息不会投递给任何一个队列，而且会丢失掉。</p>
+<p>但是另一方面，即使 <code>&quot;lazy.orange.male.rabbit&quot;</code> 有四个单词，他还是会匹配最后一个绑定，并且被投递到第二个队列中。</p>
+<blockquote>
+<h4 id="Topic交换机"><a href="#Topic交换机" class="headerlink" title="Topic交换机"></a>Topic交换机</h4><p>Topic交换机是很强大的，它可以表现出跟其他交换机类似的行为<br>当一个队列的绑定键为 “#”（井号） 的时候，这个队列将会无视消息的路由键，接收所有的消息。<br>当 <code>*</code> (星号) 和 <code>#</code> (井号) 这两个特殊字符都未在绑定键中出现的时候，此时主题交换机就拥有的直连交换机的行为。</p>
+</blockquote>
+<h2 id="代码整合"><a href="#代码整合" class="headerlink" title="代码整合"></a>代码整合</h2><p>接下来我们会将主题交换机应用到我们的日志系统中。在开始工作前，我们假设日志的路由键由两个单词组成，路由键看起来是这样的：<code>&lt;facility&gt;.&lt;severity&gt;</code></p>
+<p>代码跟<a href>上一篇教程</a>差不多。</p>
+<p>emit_log_topic.go的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">        <span class="string">"log"</span></span><br><span class="line">        <span class="string">"os"</span></span><br><span class="line">        <span class="string">"strings"</span></span><br><span class="line"></span><br><span class="line">        <span class="string">"github.com/streadway/amqp"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">failOnError</span><span class="params">(err error, msg <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">                log.Fatalf(<span class="string">"%s: %s"</span>, msg, err)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">        conn, err := amqp.Dial(<span class="string">"amqp://guest:guest@localhost:5672/"</span>)</span><br><span class="line">        failOnError(err, <span class="string">"Failed to connect to RabbitMQ"</span>)</span><br><span class="line">        <span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">        ch, err := conn.Channel()</span><br><span class="line">        failOnError(err, <span class="string">"Failed to open a channel"</span>)</span><br><span class="line">        <span class="keyword">defer</span> ch.Close()</span><br><span class="line"></span><br><span class="line">        err = ch.ExchangeDeclare(</span><br><span class="line">                <span class="string">"logs_topic"</span>, <span class="comment">// name</span></span><br><span class="line">                <span class="string">"topic"</span>,      <span class="comment">// type</span></span><br><span class="line">                <span class="literal">true</span>,         <span class="comment">// durable</span></span><br><span class="line">                <span class="literal">false</span>,        <span class="comment">// auto-deleted</span></span><br><span class="line">                <span class="literal">false</span>,        <span class="comment">// internal</span></span><br><span class="line">                <span class="literal">false</span>,        <span class="comment">// no-wait</span></span><br><span class="line">                <span class="literal">nil</span>,          <span class="comment">// arguments</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to declare an exchange"</span>)</span><br><span class="line"></span><br><span class="line">        body := bodyFrom(os.Args)</span><br><span class="line">        err = ch.Publish(</span><br><span class="line">                <span class="string">"logs_topic"</span>,          <span class="comment">// exchange</span></span><br><span class="line">                severityFrom(os.Args), <span class="comment">// routing key</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// mandatory</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// immediate</span></span><br><span class="line">                amqp.Publishing&#123;</span><br><span class="line">                        ContentType: <span class="string">"text/plain"</span>,</span><br><span class="line">                        Body:        []<span class="keyword">byte</span>(body),</span><br><span class="line">                &#125;)</span><br><span class="line">        failOnError(err, <span class="string">"Failed to publish a message"</span>)</span><br><span class="line"></span><br><span class="line">        log.Printf(<span class="string">" [x] Sent %s"</span>, body)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">bodyFrom</span><span class="params">(args []<span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">        <span class="keyword">var</span> s <span class="keyword">string</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">len</span>(args) &lt; <span class="number">3</span>) || os.Args[<span class="number">2</span>] == <span class="string">""</span> &#123;</span><br><span class="line">                s = <span class="string">"hello"</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                s = strings.Join(args[<span class="number">2</span>:], <span class="string">" "</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">severityFrom</span><span class="params">(args []<span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">        <span class="keyword">var</span> s <span class="keyword">string</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">len</span>(args) &lt; <span class="number">2</span>) || os.Args[<span class="number">1</span>] == <span class="string">""</span> &#123;</span><br><span class="line">                s = <span class="string">"anonymous.info"</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                s = os.Args[<span class="number">1</span>]</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>receive_logs_topic.go的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">        <span class="string">"log"</span></span><br><span class="line">        <span class="string">"os"</span></span><br><span class="line"></span><br><span class="line">        <span class="string">"github.com/streadway/amqp"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">failOnError</span><span class="params">(err error, msg <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">                log.Fatalf(<span class="string">"%s: %s"</span>, msg, err)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">        conn, err := amqp.Dial(<span class="string">"amqp://guest:guest@localhost:5672/"</span>)</span><br><span class="line">        failOnError(err, <span class="string">"Failed to connect to RabbitMQ"</span>)</span><br><span class="line">        <span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">        ch, err := conn.Channel()</span><br><span class="line">        failOnError(err, <span class="string">"Failed to open a channel"</span>)</span><br><span class="line">        <span class="keyword">defer</span> ch.Close()</span><br><span class="line"></span><br><span class="line">        err = ch.ExchangeDeclare(</span><br><span class="line">                <span class="string">"logs_topic"</span>, <span class="comment">// name</span></span><br><span class="line">                <span class="string">"topic"</span>,      <span class="comment">// type</span></span><br><span class="line">                <span class="literal">true</span>,         <span class="comment">// durable</span></span><br><span class="line">                <span class="literal">false</span>,        <span class="comment">// auto-deleted</span></span><br><span class="line">                <span class="literal">false</span>,        <span class="comment">// internal</span></span><br><span class="line">                <span class="literal">false</span>,        <span class="comment">// no-wait</span></span><br><span class="line">                <span class="literal">nil</span>,          <span class="comment">// arguments</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to declare an exchange"</span>)</span><br><span class="line"></span><br><span class="line">        q, err := ch.QueueDeclare(</span><br><span class="line">                <span class="string">""</span>,    <span class="comment">// name</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// durable</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// delete when usused</span></span><br><span class="line">                <span class="literal">true</span>,  <span class="comment">// exclusive</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// no-wait</span></span><br><span class="line">                <span class="literal">nil</span>,   <span class="comment">// arguments</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to declare a queue"</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> <span class="built_in">len</span>(os.Args) &lt; <span class="number">2</span> &#123;</span><br><span class="line">                log.Printf(<span class="string">"Usage: %s [binding_key]..."</span>, os.Args[<span class="number">0</span>])</span><br><span class="line">                os.Exit(<span class="number">0</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> _, s := <span class="keyword">range</span> os.Args[<span class="number">1</span>:] &#123;</span><br><span class="line">                log.Printf(<span class="string">"Binding queue %s to exchange %s with routing key %s"</span>,</span><br><span class="line">                        q.Name, <span class="string">"logs_topic"</span>, s)</span><br><span class="line">                err = ch.QueueBind(</span><br><span class="line">                        q.Name,       <span class="comment">// queue name</span></span><br><span class="line">                        s,            <span class="comment">// routing key</span></span><br><span class="line">                        <span class="string">"logs_topic"</span>, <span class="comment">// exchange</span></span><br><span class="line">                        <span class="literal">false</span>,</span><br><span class="line">                        <span class="literal">nil</span>)</span><br><span class="line">                failOnError(err, <span class="string">"Failed to bind a queue"</span>)</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        msgs, err := ch.Consume(</span><br><span class="line">                q.Name, <span class="comment">// queue</span></span><br><span class="line">                <span class="string">""</span>,     <span class="comment">// consumer</span></span><br><span class="line">                <span class="literal">true</span>,   <span class="comment">// auto ack</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// exclusive</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// no local</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// no wait</span></span><br><span class="line">                <span class="literal">nil</span>,    <span class="comment">// args</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to register a consumer"</span>)</span><br><span class="line"></span><br><span class="line">        forever := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">bool</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">                <span class="keyword">for</span> d := <span class="keyword">range</span> msgs &#123;</span><br><span class="line">                        log.Printf(<span class="string">" [x] %s"</span>, d.Body)</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;()</span><br><span class="line"></span><br><span class="line">        log.Printf(<span class="string">" [*] Waiting for logs. To exit press CTRL+C"</span>)</span><br><span class="line">        &lt;-forever</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行下边命令 接收所有日志：  </p>
+<pre><code>go run receive_logs_topic.go &quot;#&quot;</code></pre><p>执行下边命令 接收来自”kern“设备的日志：  </p>
+<pre><code>go run receive_logs_topic.go &quot;kern.*&quot;</code></pre><p>执行下边命令 只接收严重程度为”critical“的日志：  </p>
+<pre><code>go run receive_logs_topic.go &quot;*.critical&quot;</code></pre><p>执行下边命令 建立多个绑定：  </p>
+<pre><code>go run receive_logs_topic.go &quot;kern.*&quot; &quot;*.critical&quot;</code></pre><p>执行下边命令 发送路由键为 “kern.critical” 的日志：  </p>
+<pre><code>go run emit_log_topic.go &quot;kern.critical&quot; &quot;A critical kernel error&quot;</code></pre><p>执行上边命令试试看效果吧。另外，上边代码不会对路由键和绑定键做任何假设，所以你可以在命令中使用超过两个路由键参数。</p>
+<h3 id="如果你现在还没被搞晕，想想下边问题"><a href="#如果你现在还没被搞晕，想想下边问题" class="headerlink" title="如果你现在还没被搞晕，想想下边问题:"></a>如果你现在还没被搞晕，想想下边问题:</h3><ul>
+<li>绑定键为 <code>*</code> 的队列会取到一个路由键为空的消息吗？  </li>
+<li>绑定键为 <code>#.*</code> 的队列会获取到一个名为<code>..</code>的路由键的消息吗？它会取到一个路由键为单个单词的消息吗？  </li>
+<li><code>a.*.#</code> 和 <code>a.#</code>的区别在哪儿？</li>
+</ul>
+<p>（完整代码参见<a href="https://github.com/rabbitmq/rabbitmq-tutorials/blob/master/go/emit_log_topic.go" target="_blank" rel="noopener">emit_logs_topic.go</a> and <a href="https://github.com/rabbitmq/rabbitmq-tutorials/blob/master/go/receive_logs_topic.go" target="_blank" rel="noopener">receive_logs_topic.go</a>)</p>
+<p>移步至<a href>教程 6</a> 学习RPC。</p>
+<blockquote>
+<p>原文：<a href="https://www.rabbitmq.com/tutorials/tutorial-five-go.html" target="_blank" rel="noopener">Topics</a></p>
+</blockquote>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/alipay.JPG">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/wechatpay.JPG">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">docker</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">.NET Core</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/01/RabbitMQ教程（译）-Topics/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+    <a href="/2019/09/01/RabbitMQ教程（译）-RPC/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          RabbitMQ教程（译）-RPC
+        
+      </div>
+    </a>
   
   
-    </div></section>
+    <a href="/2019/09/01/RabbitMQ教程（译）-Routing/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">RabbitMQ教程（译）-Routing</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#为什么需要topic交换机？"><span class="toc-number">1.</span> <span class="toc-text">为什么需要topic交换机？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#topic交换机"><span class="toc-number">2.</span> <span class="toc-text">topic交换机</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Topic交换机"><span class="toc-number">2.0.1.</span> <span class="toc-text">Topic交换机</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码整合"><span class="toc-number">3.</span> <span class="toc-text">代码整合</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#如果你现在还没被搞晕，想想下边问题"><span class="toc-number">3.1.</span> <span class="toc-text">如果你现在还没被搞晕，想想下边问题:</span></a></li></ol></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+<script src="https://billts.site/js/gitment.js"></script>
+<script>
+var gitment = new Gitment({
+  id: 'Sun Sep 01 2019 11:05:39 GMT+0800',
+  owner: 'Bingjian-Zhu',
+  repo: 'Bingjian-Zhu.github.io',
+  oauth: {
+    client_id: 'ea0e7d1f85b69731c83e',
+    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
+  
 
 
           </div>
@@ -232,9 +441,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

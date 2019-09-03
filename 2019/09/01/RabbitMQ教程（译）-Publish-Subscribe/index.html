@@ -6,15 +6,24 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: .NET Core | 烟花易冷的博客</title>
+  <title>RabbitMQ教程（译）-Publish/Subscribe | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="烟花易冷的博客">
-<meta property="og:url" content="http://yoursite.com/tags/NET-Core/index.html">
+  <meta name="description" content="发布／订阅（使用Go客户端）">
+<meta name="keywords" content="RabbitMQ">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ教程（译）-Publish&#x2F;Subscribe">
+<meta property="og:url" content="http://yoursite.com/2019/09/01/RabbitMQ教程（译）-Publish-Subscribe/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
+<meta property="og:description" content="发布／订阅（使用Go客户端）">
 <meta property="og:locale" content="en">
+<meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/exchanges.png">
+<meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/bindings.png">
+<meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/python-three-overall.png">
+<meta property="og:updated_time" content="2019-09-03T02:03:22.221Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="烟花易冷的博客">
+<meta name="twitter:title" content="RabbitMQ教程（译）-Publish&#x2F;Subscribe">
+<meta name="twitter:description" content="发布／订阅（使用Go客户端）">
+<meta name="twitter:image" content="http://www.rabbitmq.com/img/tutorials/exchanges.png">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -152,64 +161,292 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-RabbitMQ教程（译）-Publish-Subscribe" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/08/28/使用Docker部署NET-Core程序/" class="archive-article-date">
-  	<time datetime="2019-08-28T15:15:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-28</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/08/28/使用Docker部署NET-Core程序/">使用Docker部署.NET Core程序</a>
+    <h1 class="article-title" itemprop="name">
+      RabbitMQ教程（译）-Publish/Subscribe
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/09/01/RabbitMQ教程（译）-Publish-Subscribe/" class="archive-article-date">
+  	<time datetime="2019-09-01T03:04:55.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="发布／订阅"><a href="#发布／订阅" class="headerlink" title="发布／订阅"></a>发布／订阅</h2><p><strong>（使用Go客户端）</strong></p>
+<a id="more"></a>
+
+<p>在上篇教程中，我们搭建了一个工作队列，每个任务只分发给一个工作者（worker）。在本篇教程中，我们要做的跟之前完全不一样 —— 分发一个消息给多个消费者（consumers）。这种模式被称为“发布／订阅”。</p>
+<p>为了描述这种模式，我们将会构建一个简单的日志系统。它包括两个程序——第一个程序负责发送日志消息，第二个程序负责获取消息并输出内容。</p>
+<p>在我们的这个日志系统中，所有正在运行的接收方程序都会接受消息。我们用其中一个接收者（receiver）把日志写入硬盘中，另外一个接受者（receiver）把日志输出到屏幕上。</p>
+<p>最终，日志消息被广播给所有的接受者（receivers）。</p>
+<h2 id="交换机（Exchanges）"><a href="#交换机（Exchanges）" class="headerlink" title="交换机（Exchanges）"></a>交换机（Exchanges）</h2><p>前面的教程中，我们发送消息到队列并从中取出消息。现在是时候介绍RabbitMQ中完整的消息模型了。</p>
+<p>让我们简单的概括一下之前的教程：</p>
+<ul>
+<li>发布者（producer）是发布消息的应用程序。</li>
+<li>队列（queue）用于消息存储的缓冲。</li>
+<li>消费者（consumer）是接收消息的应用程序。</li>
+</ul>
+<p>RabbitMQ消息模型的核心理念是：发布者（producer）不会直接发送任何消息给队列。事实上，发布者（producer）甚至不知道消息是否已经被投递到队列。</p>
+<p>发布者（producer）只需要把消息发送给一个交换机（exchange）。交换机非常简单，它一边从发布者方接收消息，一边把消息推送到队列。交换机必须知道如何处理它接收到的消息，是应该推送到指定的队列还是是多个队列，或者是直接忽略消息。这些规则是通过交换机类型（exchange type）来定义的。</p>
+<p><img src="http://www.rabbitmq.com/img/tutorials/exchanges.png" alt></p>
+<p>有几个可供选择的交换机类型：<code>direct</code>, <code>topic</code>, <code>headers</code>和<code>fanout</code>。我们在这里主要说明最后一个 —— <code>fanout</code>。先创建一个<code>fanout</code>类型的交换机，命名为logs：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">err = ch.ExchangeDeclare(</span><br><span class="line">  <span class="string">"logs"</span>,   <span class="comment">// name</span></span><br><span class="line">  <span class="string">"fanout"</span>, <span class="comment">// type</span></span><br><span class="line">  <span class="literal">true</span>,     <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>,    <span class="comment">// auto-deleted</span></span><br><span class="line">  <span class="literal">false</span>,    <span class="comment">// internal</span></span><br><span class="line">  <span class="literal">false</span>,    <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,      <span class="comment">// arguments</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>扇型交换机（fanout）很简单，你可能从名字上就能猜测出来，它把消息发送给它所知道的所有队列。这正是我们的日志系统所需要的。</p>
+<blockquote>
+<h4 id="交换器列表"><a href="#交换器列表" class="headerlink" title="交换器列表"></a>交换器列表</h4><p><code>rabbitmqctl</code>能够列出服务器上所有的交换器：<br>    sudo rabbitmqctl list_exchanges<br>这个列表中有一些叫做<code>amq.*</code>的匿名交换器。这些都是默认创建的，不过这时候你还不需要使用他们。</p>
+</blockquote>
+<blockquote>
+<h4 id="匿名的交换器"><a href="#匿名的交换器" class="headerlink" title="匿名的交换器"></a>匿名的交换器</h4><p>前面的教程中我们对交换机一无所知，但仍然能够发送消息到队列中。因为我们使用了命名为空字符串(“”)默认的交换机。<br>回想我们之前是如何发布一则消息：</p>
+<pre><code> err = ch.Publish(
+  &quot;&quot;,     // exchange
+  q.Name, // routing key
+  false,  // mandatory
+  false,  // immediate
+  amqp.Publishing{
+    ContentType: &quot;text/plain&quot;,
+    Body:        []byte(body),
+})</code></pre><p>exchange参数就是交换机的名称。空字符串代表默认或者匿名交换机：消息将会根据指定的routing_key分发到指定的队列。</p>
+</blockquote>
+<p>现在，我们就可以发送消息到一个具名交换机了：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">err = ch.ExchangeDeclare(</span><br><span class="line">  <span class="string">"logs"</span>,   <span class="comment">// name</span></span><br><span class="line">  <span class="string">"fanout"</span>, <span class="comment">// type</span></span><br><span class="line">  <span class="literal">true</span>,     <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>,    <span class="comment">// auto-deleted</span></span><br><span class="line">  <span class="literal">false</span>,    <span class="comment">// internal</span></span><br><span class="line">  <span class="literal">false</span>,    <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,      <span class="comment">// arguments</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to declare an exchange"</span>)</span><br><span class="line"></span><br><span class="line">body := bodyFrom(os.Args)</span><br><span class="line">err = ch.Publish(</span><br><span class="line">  <span class="string">"logs"</span>, <span class="comment">// exchange</span></span><br><span class="line">  <span class="string">""</span>,     <span class="comment">// routing key</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// mandatory</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// immediate</span></span><br><span class="line">  amqp.Publishing&#123;</span><br><span class="line">          ContentType: <span class="string">"text/plain"</span>,</span><br><span class="line">          Body:        []<span class="keyword">byte</span>(body),</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+
+<h2 id="临时队列"><a href="#临时队列" class="headerlink" title="临时队列"></a>临时队列</h2><p>你还记得之前我们使用的队列名吗（ hello和task_queue）？给一个队列命名是很重要的——我们需要把工作者（workers）指向正确的队列。如果你打算在发布者（producers）和消费者（consumers）之间共享同队列的话，给队列命名是十分重要的。</p>
+<p>但是这并不适用于我们的日志系统。我们打算接收所有的日志消息，而不仅仅是一小部分。我们关心的是最新的消息而不是旧的。为了解决这个问题，我们需要做两件事情。</p>
+<p>首先，当我们连接上RabbitMQ的时候，我们需要一个全新的、空的队列。我们可以手动创建一个随机的队列名，或者让服务器为我们选择一个随机的队列名（推荐）。</p>
+<p>其次，当与消费者（consumer）断开连接的时候，这个队列应当被立即删除。<br>在<code>amqp</code>客户端中，当我们将队列名称作为空字符串提供时，我们创建一个具有生成名称的非持久队列：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">q, err := ch.QueueDeclare(</span><br><span class="line">  <span class="string">""</span>,    <span class="comment">// name</span></span><br><span class="line">  <span class="literal">false</span>, <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>, <span class="comment">// delete when usused</span></span><br><span class="line">  <span class="literal">true</span>,  <span class="comment">// exclusive</span></span><br><span class="line">  <span class="literal">false</span>, <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,   <span class="comment">// arguments</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>该方法返回时，队列实例包含RabbitMQ生成的随机队列名称。例如，它可能看起来像<code>amq.gen-JzTY20BRgKO-HjmUJj0wLg</code>。<br>当声明它的连接关闭时，队列将被删除，因为它被声明为<code>exclusive</code>。<br>您可以在<a href="https://www.rabbitmq.com/queues.html" target="_blank" rel="noopener">guide on queues</a>了解有关<code>exclusive</code>和其他队列属性的更多信息</p>
+<h2 id="绑定（Bindings）"><a href="#绑定（Bindings）" class="headerlink" title="绑定（Bindings）"></a>绑定（Bindings）</h2><p><img src="http://www.rabbitmq.com/img/tutorials/bindings.png" alt></p>
+<p>我们已经创建了一个扇型交换机（fanout）和一个队列。现在我们需要告诉交换机如何发送消息给我们的队列。交换器和队列之间的联系我们称之为绑定（binding）。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">err = ch.QueueBind(</span><br><span class="line">  q.Name, <span class="comment">// queue name</span></span><br><span class="line">  <span class="string">""</span>,     <span class="comment">// routing key</span></span><br><span class="line">  <span class="string">"logs"</span>, <span class="comment">// exchange</span></span><br><span class="line">  <span class="literal">false</span>,</span><br><span class="line">  <span class="literal">nil</span>,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>现在，logs交换机将会把消息添加到我们的队列中。</p>
+<blockquote>
+<h4 id="绑定（binding）列表"><a href="#绑定（binding）列表" class="headerlink" title="绑定（binding）列表"></a>绑定（binding）列表</h4><p>你可以使用<code>rabbitmqctl list_bindings</code> 列出所有现存的绑定。</p>
+</blockquote>
+<h2 id="代码整合"><a href="#代码整合" class="headerlink" title="代码整合"></a>代码整合</h2><p><img src="http://www.rabbitmq.com/img/tutorials/python-three-overall.png" alt></p>
+<p>发布日志消息的程序看起来和之前的没有太大区别。最重要的改变就是我们把消息发送给logs交换机而不是匿名交换机。在发送的时候我们需要提供<code>routing_key</code>参数，但是它的值<code>fanout</code> exchange忽略。以下是<code>emit_log.go</code>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">        <span class="string">"log"</span></span><br><span class="line">        <span class="string">"os"</span></span><br><span class="line">        <span class="string">"strings"</span></span><br><span class="line"></span><br><span class="line">        <span class="string">"github.com/streadway/amqp"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">failOnError</span><span class="params">(err error, msg <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">                log.Fatalf(<span class="string">"%s: %s"</span>, msg, err)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">        conn, err := amqp.Dial(<span class="string">"amqp://guest:guest@localhost:5672/"</span>)</span><br><span class="line">        failOnError(err, <span class="string">"Failed to connect to RabbitMQ"</span>)</span><br><span class="line">        <span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">        ch, err := conn.Channel()</span><br><span class="line">        failOnError(err, <span class="string">"Failed to open a channel"</span>)</span><br><span class="line">        <span class="keyword">defer</span> ch.Close()</span><br><span class="line"></span><br><span class="line">        err = ch.ExchangeDeclare(</span><br><span class="line">                <span class="string">"logs"</span>,   <span class="comment">// name</span></span><br><span class="line">                <span class="string">"fanout"</span>, <span class="comment">// type</span></span><br><span class="line">                <span class="literal">true</span>,     <span class="comment">// durable</span></span><br><span class="line">                <span class="literal">false</span>,    <span class="comment">// auto-deleted</span></span><br><span class="line">                <span class="literal">false</span>,    <span class="comment">// internal</span></span><br><span class="line">                <span class="literal">false</span>,    <span class="comment">// no-wait</span></span><br><span class="line">                <span class="literal">nil</span>,      <span class="comment">// arguments</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to declare an exchange"</span>)</span><br><span class="line"></span><br><span class="line">        body := bodyFrom(os.Args)</span><br><span class="line">        err = ch.Publish(</span><br><span class="line">                <span class="string">"logs"</span>, <span class="comment">// exchange</span></span><br><span class="line">                <span class="string">""</span>,     <span class="comment">// routing key</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// mandatory</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// immediate</span></span><br><span class="line">                amqp.Publishing&#123;</span><br><span class="line">                        ContentType: <span class="string">"text/plain"</span>,</span><br><span class="line">                        Body:        []<span class="keyword">byte</span>(body),</span><br><span class="line">                &#125;)</span><br><span class="line">        failOnError(err, <span class="string">"Failed to publish a message"</span>)</span><br><span class="line"></span><br><span class="line">        log.Printf(<span class="string">" [x] Sent %s"</span>, body)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">bodyFrom</span><span class="params">(args []<span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">        <span class="keyword">var</span> s <span class="keyword">string</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">len</span>(args) &lt; <span class="number">2</span>) || os.Args[<span class="number">1</span>] == <span class="string">""</span> &#123;</span><br><span class="line">                s = <span class="string">"hello"</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                s = strings.Join(args[<span class="number">1</span>:], <span class="string">" "</span>)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>(<a href="http://github.com/rabbitmq/rabbitmq-tutorials/blob/master/go/emit_log.go" target="_blank" rel="noopener">emit_log.go</a> 源码)</p>
+<p>正如你看到的那样，在连接成功之后，我们声明了一个交换器，这一个是很重要的，因为不允许发布消息到不存在的交换器。</p>
+<p>如果没有绑定队列到交换器，消息将会丢失。但这个没有所谓，如果没有消费者监听，那么消息就会被忽略。</p>
+<p><code>receive_logs.go</code>:的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">        <span class="string">"log"</span></span><br><span class="line"></span><br><span class="line">        <span class="string">"github.com/streadway/amqp"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">failOnError</span><span class="params">(err error, msg <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">                log.Fatalf(<span class="string">"%s: %s"</span>, msg, err)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">        conn, err := amqp.Dial(<span class="string">"amqp://guest:guest@localhost:5672/"</span>)</span><br><span class="line">        failOnError(err, <span class="string">"Failed to connect to RabbitMQ"</span>)</span><br><span class="line">        <span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">        ch, err := conn.Channel()</span><br><span class="line">        failOnError(err, <span class="string">"Failed to open a channel"</span>)</span><br><span class="line">        <span class="keyword">defer</span> ch.Close()</span><br><span class="line"></span><br><span class="line">        err = ch.ExchangeDeclare(</span><br><span class="line">                <span class="string">"logs"</span>,   <span class="comment">// name</span></span><br><span class="line">                <span class="string">"fanout"</span>, <span class="comment">// type</span></span><br><span class="line">                <span class="literal">true</span>,     <span class="comment">// durable</span></span><br><span class="line">                <span class="literal">false</span>,    <span class="comment">// auto-deleted</span></span><br><span class="line">                <span class="literal">false</span>,    <span class="comment">// internal</span></span><br><span class="line">                <span class="literal">false</span>,    <span class="comment">// no-wait</span></span><br><span class="line">                <span class="literal">nil</span>,      <span class="comment">// arguments</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to declare an exchange"</span>)</span><br><span class="line"></span><br><span class="line">        q, err := ch.QueueDeclare(</span><br><span class="line">                <span class="string">""</span>,    <span class="comment">// name</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// durable</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// delete when usused</span></span><br><span class="line">                <span class="literal">true</span>,  <span class="comment">// exclusive</span></span><br><span class="line">                <span class="literal">false</span>, <span class="comment">// no-wait</span></span><br><span class="line">                <span class="literal">nil</span>,   <span class="comment">// arguments</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to declare a queue"</span>)</span><br><span class="line"></span><br><span class="line">        err = ch.QueueBind(</span><br><span class="line">                q.Name, <span class="comment">// queue name</span></span><br><span class="line">                <span class="string">""</span>,     <span class="comment">// routing key</span></span><br><span class="line">                <span class="string">"logs"</span>, <span class="comment">// exchange</span></span><br><span class="line">                <span class="literal">false</span>,</span><br><span class="line">                <span class="literal">nil</span>,</span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to bind a queue"</span>)</span><br><span class="line"></span><br><span class="line">        msgs, err := ch.Consume(</span><br><span class="line">                q.Name, <span class="comment">// queue</span></span><br><span class="line">                <span class="string">""</span>,     <span class="comment">// consumer</span></span><br><span class="line">                <span class="literal">true</span>,   <span class="comment">// auto-ack</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// exclusive</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// no-local</span></span><br><span class="line">                <span class="literal">false</span>,  <span class="comment">// no-wait</span></span><br><span class="line">                <span class="literal">nil</span>,    <span class="comment">// args</span></span><br><span class="line">        )</span><br><span class="line">        failOnError(err, <span class="string">"Failed to register a consumer"</span>)</span><br><span class="line"></span><br><span class="line">        forever := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">bool</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">                <span class="keyword">for</span> d := <span class="keyword">range</span> msgs &#123;</span><br><span class="line">                        log.Printf(<span class="string">" [x] %s"</span>, d.Body)</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;()</span><br><span class="line"></span><br><span class="line">        log.Printf(<span class="string">" [*] Waiting for logs. To exit press CTRL+C"</span>)</span><br><span class="line">        &lt;-forever</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>(<a href="https://github.com/rabbitmq/rabbitmq-tutorials/blob/master/go/receive_logs.go" target="_blank" rel="noopener">receive_logs.go</a> 源码)</p>
+<p>这样我们就完成了。如果你想把日志保存到文件中，只需要打开控制台输入：</p>
+<pre><code>$ go run receive_logs.go &gt; logs_from_rabbit.log</code></pre><p>如果你想在屏幕中查看日志，那么打开一个新的终端然后运行：</p>
+<pre><code>$ go run receive_logs.go</code></pre><p>当然还要发送日志：</p>
+<pre><code>$ go run emit_log.go</code></pre><p>使用<code>rabbitmqctl list_bindings</code>你可确认已经创建的队列绑定。你可以看到运行中的两个<code>receive_logs.go</code>程序：</p>
+<pre><code> sudo rabbitmqctl list_bindings
+# =&gt; Listing bindings ...
+# =&gt; logs    exchange        amq.gen-JzTY20BRgKO-HjmUJj0wLg  queue           []
+# =&gt; logs    exchange        amq.gen-vso0PVvyiRIL2WoV3i48Yg  queue           []
+# =&gt; ...done.</code></pre><p>显示结果很直观：logs交换器把数据发送给两个系统命名的队列。这就是我们所期望的。</p>
+<p>如何监听消息的子集呢？让我们移步教程4</p>
+<blockquote>
+<p>原文：<a href="https://www.rabbitmq.com/tutorials/tutorial-three-go.html" target="_blank" rel="noopener">Publish/Subscribe</a></p>
+</blockquote>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/alipay.JPG">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/wechatpay.JPG">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">docker</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">.NET Core</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/01/RabbitMQ教程（译）-Publish-Subscribe/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+    <a href="/2019/09/01/RabbitMQ教程（译）-Routing/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          RabbitMQ教程（译）-Routing
+        
+      </div>
+    </a>
   
   
-    </div></section>
+    <a href="/2019/09/01/RabbitMQ教程（译）-Work-queues/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">RabbitMQ教程（译）-Work queues</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#发布／订阅"><span class="toc-number">1.</span> <span class="toc-text">发布／订阅</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#交换机（Exchanges）"><span class="toc-number">2.</span> <span class="toc-text">交换机（Exchanges）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#交换器列表"><span class="toc-number">2.0.1.</span> <span class="toc-text">交换器列表</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#匿名的交换器"><span class="toc-number">2.0.2.</span> <span class="toc-text">匿名的交换器</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#临时队列"><span class="toc-number">3.</span> <span class="toc-text">临时队列</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#绑定（Bindings）"><span class="toc-number">4.</span> <span class="toc-text">绑定（Bindings）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#绑定（binding）列表"><span class="toc-number">4.0.1.</span> <span class="toc-text">绑定（binding）列表</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码整合"><span class="toc-number">5.</span> <span class="toc-text">代码整合</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+<script src="https://billts.site/js/gitment.js"></script>
+<script>
+var gitment = new Gitment({
+  id: 'Sun Sep 01 2019 11:04:55 GMT+0800',
+  owner: 'Bingjian-Zhu',
+  repo: 'Bingjian-Zhu.github.io',
+  oauth: {
+    client_id: 'ea0e7d1f85b69731c83e',
+    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
+  
 
 
           </div>
@@ -232,9 +469,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
