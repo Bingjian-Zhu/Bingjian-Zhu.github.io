@@ -18,7 +18,7 @@
 <meta property="og:locale" content="en">
 <meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/python-two.png">
 <meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/prefetch-count.png">
-<meta property="og:updated_time" content="2019-09-03T02:02:56.570Z">
+<meta property="og:updated_time" content="2019-09-03T02:53:11.842Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RabbitMQ教程（译）-Work queues">
 <meta name="twitter:description" content="工作队列（使用Go客户端）">
@@ -184,7 +184,7 @@
 <a id="more"></a>
 
 <p><img src="http://www.rabbitmq.com/img/tutorials/python-two.png" alt>  </p>
-<p>在第一篇教程中，我们已经写了一个从已知队列中发送和获取消息的程序。在这篇教程中，我们将创建一个工作队列（Work Queue），它会发送一些耗时的任务给多个工作者（Worker）。</p>
+<p>在<a href="https://bingjian-zhu.github.io/2019/09/01/RabbitMQ%E6%95%99%E7%A8%8B%EF%BC%88%E8%AF%91%EF%BC%89-Hello-World/" target="_blank" rel="noopener">第一篇教程</a>中，我们已经写了一个从已知队列中发送和获取消息的程序。在这篇教程中，我们将创建一个工作队列（Work Queue），它会发送一些耗时的任务给多个工作者（Worker）。</p>
 <p>工作队列（又称：任务队列——Task Queues）是为了避免等待一些占用大量资源、时间的操作。当我们把任务（Task）当作消息发送到队列中，一个运行在后台的工作者（worker）进程就会取出任务然后处理。当你运行多个工作者（workers），任务就会在它们之间共享。</p>
 <p>这个概念在网络应用中是非常有用的，它可以在短暂的HTTP请求中处理一些复杂的任务。</p>
 <h2 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h2><p>之前的教程中，我们发送了一个包含“Hello World!”的字符串消息。现在，我们将发送一些字符串，把这些字符串当作复杂的任务。我们没有真实的例子，例如图片缩放、pdf文件转换。所以使用time.sleep()函数来模拟这种情况。我们在字符串中加上点号（.）来表示任务的复杂程度，一个点（.）将会耗时1秒钟。比如”Hello…”就会耗时3秒钟。</p>
@@ -218,7 +218,7 @@
 <h2 id="消息确认"><a href="#消息确认" class="headerlink" title="消息确认"></a>消息确认</h2><p>当处理一个比较耗时得任务的时候，你也许想知道消费者（consumers）是否运行到一半就挂掉。当前的代码中，当消息被RabbitMQ发送给消费者（consumers）之后，马上就会在内存中移除。这种情况，你只要把一个工作者（worker）停止，正在处理的消息就会丢失。同时，所有发送到这个工作者的还没有处理的消息都会丢失。</p>
 <p>我们不想丢失任何任务消息。如果一个工作者（worker）挂掉了，我们希望任务会重新发送给其他的工作者（worker）。</p>
 <p>为了防止消息丢失，RabbitMQ提供了消息响应（acknowledgments）。消费者会通过一个ack（响应），告诉RabbitMQ已经收到并处理了某条消息，然后RabbitMQ就会释放并删除这条消息。</p>
-<p>如果消费者（consumer）挂掉了，没有发送响应，RabbitMQ就会认为消息没有被完全处理，然后重新发送给其他消费者（consumer）。这样，及时工作者（workers）偶尔的挂掉，也不会丢失消息。</p>
+<p>如果消费者（consumer）挂掉了，没有发送响应，RabbitMQ就会认为消息没有被完全处理，然后重新发送给其他消费者（consumer）。这样，即使工作者（workers）偶尔的挂掉，也不会丢失消息。</p>
 <p>消息是没有超时这个概念的；当工作者与它断开连的时候，RabbitMQ会重新发送消息。这样在处理一个耗时非常长的消息任务的时候就不会出问题了。</p>
 <p>在本教程中，我们将使用手动消息确认，通过为<code>auto-ack</code>参数传递false，一旦有任务完成，使用<code>d.Ack（false）</code>向RabbitMQ服务器发送消费完成的确认（这个确认消息是单次传递的）。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">msgs, err := ch.Consume(</span><br><span class="line">  q.Name, <span class="comment">// queue</span></span><br><span class="line">  <span class="string">""</span>,     <span class="comment">// consumer</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// auto-ack</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// exclusive</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// no-local</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,    <span class="comment">// args</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to register a consumer"</span>)</span><br><span class="line"></span><br><span class="line">forever := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">bool</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">  <span class="keyword">for</span> d := <span class="keyword">range</span> msgs &#123;</span><br><span class="line">    log.Printf(<span class="string">"Received a message: %s"</span>, d.Body)</span><br><span class="line">    dot_count := bytes.Count(d.Body, []<span class="keyword">byte</span>(<span class="string">"."</span>))</span><br><span class="line">    t := time.Duration(dot_count)</span><br><span class="line">    time.Sleep(t * time.Second)</span><br><span class="line">    log.Printf(<span class="string">"Done"</span>)</span><br><span class="line">    d.Ack(<span class="literal">false</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">log.Printf(<span class="string">" [*] Waiting for messages. To exit press CTRL+C"</span>)</span><br><span class="line">&lt;-forever</span><br></pre></td></tr></table></figure>
@@ -226,17 +226,17 @@
 <p>运行上面的代码，我们发现即使使用CTRL+C杀掉了一个工作者（worker）进程，消息也不会丢失。当工作者（worker）挂掉这后，所有没有响应的消息都会重新发送。</p>
 <blockquote>
 <h4 id="忘记确认"><a href="#忘记确认" class="headerlink" title="忘记确认"></a>忘记确认</h4><p>忘记ack是一个常见的错误。这是一个简单的错误，但后果是严重的。当客户端退出时，消息将被重新传递（这可能看起来像随机重新传递），但是RabbitMQ将会占用越来越多的内存，因为它无法释放任何未经消息的消息<br>为了排除这种错误，你可以使用<code>rabbitmqctl</code>命令，输出<code>messages_unacknowledged</code>字段：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; sudo rabbitmqctl list_queues name messages_ready messages_unacknowledged</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
 </blockquote>
+<blockquote>
+<pre><code>sudo rabbitmqctl list_queues name messages_ready messages_unacknowledged</code></pre></blockquote>
 <p>Windows上执行：</p>
 <blockquote>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;rabbitmqctl.bat list_queues name messages_ready messages_unacknowledged</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
-</blockquote>
+<pre><code>rabbitmqctl.bat list_queues name messages_ready messages_unacknowledged</code></pre></blockquote>
 <h2 id="消息持久化"><a href="#消息持久化" class="headerlink" title="消息持久化"></a>消息持久化</h2><p>如果你没有特意告诉RabbitMQ，那么在它退出或者崩溃的时候，将会丢失所有队列和消息。为了确保信息不会丢失，有两个事情是需要注意的：我们必须把“队列”和“消息”设为持久化。</p>
 <p>首先，为了不让队列消失，需要把队列声明为持久化（durable）：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">q, err := ch.QueueDeclare(</span><br><span class="line">  <span class="string">"hello"</span>,      <span class="comment">// name</span></span><br><span class="line">  <span class="literal">true</span>,         <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>,        <span class="comment">// delete when unused</span></span><br><span class="line">  <span class="literal">false</span>,        <span class="comment">// exclusive</span></span><br><span class="line">  <span class="literal">false</span>,        <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,          <span class="comment">// arguments</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to declare a queue"</span>)</span><br></pre></td></tr></table></figure>
 
-<p>尽管这行代码本身是正确的，但是仍然不会正确运行。因为我们已经定义过一个叫<code>hello</code>的非持久化队列。RabbitMq不允许你使用不同的参数重新定义一个队列，它会返回一个错误。但我们现在使用一个快捷的解决方法——用不同的名字，例如<code>task_queue</code>。</p>
+<p>尽管这行代码本身是正确的，但是达不到我们预期的结果。因为我们已经定义过一个叫<code>hello</code>的非持久化队列。RabbitMq不允许你使用不同的参数重新定义一个队列，它会返回一个错误。但我们现在使用一个快捷的解决方法——用不同的名字，例如<code>task_queue</code>。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">q, err := ch.QueueDeclare(</span><br><span class="line">  <span class="string">"task_queue"</span>, <span class="comment">// name</span></span><br><span class="line">  <span class="literal">true</span>,         <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>,        <span class="comment">// delete when unused</span></span><br><span class="line">  <span class="literal">false</span>,        <span class="comment">// exclusive</span></span><br><span class="line">  <span class="literal">false</span>,        <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,          <span class="comment">// arguments</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to declare a queue"</span>)</span><br></pre></td></tr></table></figure>
 
 <p>这个<code>durable</code>必须在生产者（producer）和消费者（consumer）对应的代码中修改。</p>
@@ -249,7 +249,7 @@
 <h2 id="公平调度"><a href="#公平调度" class="headerlink" title="公平调度"></a>公平调度</h2><p>你应该已经发现，它仍旧没有按照我们期望的那样进行分发。比如有两个工作者（workers），处理奇数消息的比较繁忙，处理偶数消息的比较轻松。然而RabbitMQ并不知道这些，它仍然一如既往的派发消息。</p>
 <p>这时因为RabbitMQ只管分发进入队列的消息，不会关心有多少消费者（consumer）没有作出响应。它盲目的把第n-th条消息发给第n-th个消费者。</p>
 <p><img src="http://www.rabbitmq.com/img/tutorials/prefetch-count.png" alt></p>
-<p>防止程序崩溃，我们可以设置预取计数值为1。告诉RabbitMQ一次只向一个worker发送一条消息。换句话说，在处理并确认前一个消息之前，不要向工作人员发送新消息。</p>
+<p>我们可以设置预取计数值为1。告诉RabbitMQ一次只向一个worker发送一条消息。换句话说，在处理并确认前一个消息之前，不要向工作人员发送新消息。</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">err = ch.Qos(</span><br><span class="line">  <span class="number">1</span>,     <span class="comment">// prefetch count</span></span><br><span class="line">  <span class="number">0</span>,     <span class="comment">// prefetch size</span></span><br><span class="line">  <span class="literal">false</span>, <span class="comment">// global</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to set QoS"</span>)</span><br></pre></td></tr></table></figure>
 
 <blockquote>
