@@ -23,7 +23,7 @@
 <meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/sending.png">
 <meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/receiving.png">
 <meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/RabbitMQ/Hello%20World/6.png">
-<meta property="og:updated_time" content="2019-09-03T02:03:55.138Z">
+<meta property="og:updated_time" content="2019-09-03T02:29:36.632Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RabbitMQ教程（译）-Hello World">
 <meta name="twitter:description" content="前提条件 本教程假设RabbitMQ已经安装在你本机的 (5672)端口。如果你使用了不同的主机、端口或者凭证，连接设置就需要作出一些对应的调整。">
@@ -190,7 +190,6 @@
 </blockquote>
 <a id="more"></a>
 
-<hr>
 <h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>RabbitMQ是一个消息代理。它的工作就是接收和转发消息。你可以把它想像成一个邮局：你把信件放入邮箱，邮递员就会把信件投递到你的收件人处。在这个比喻中，RabbitMQ就扮演着邮箱、邮局以及邮递员的角色。</p>
 <p>RabbitMQ和邮局的主要区别在于，它处理纸张，而是接收、存储和发送消息（message）这种二进制数据。</p>
 <p>下面是RabbitMQ和消息所涉及到的一些术语。</p>
@@ -199,11 +198,8 @@
 <li>队列(queue)就是存在于RabbitMQ中邮箱的名称。虽然消息的传输经过了RabbitMQ和你的应用程序，但是它只能被存储于队列当中。实质上队列就是个巨大的消息缓冲区，它的大小只受主机内存和硬盘限制。多个生产者（producers）可以把消息发送给同一个队列，同样，多个消费者（consumers）也能够从同一个队列（queue）中获取数据。队列可以绘制成这样（图上是队列的名称）：<br><img src="http://www.rabbitmq.com/img/tutorials/queue.png" alt="img"></li>
 <li>在这里，消费（Consuming）和接收(receiving)是同一个意思。一个消费者（consumer）就是一个等待获取消息的程序。我们把它绘制为”C”：<br><img src="http://www.rabbitmq.com/img/tutorials/consumer.png" alt="img"></li>
 </ul>
-<hr>
-<h2 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World!"></a>Hello World!</h2><blockquote>
-<p><strong>（使用Go客户端）</strong></p>
-</blockquote>
-<p>在本教程的这一部分中，我们将在Go中编写两个小程序;发送单个消息的生产者，以及接收消息并将其打印出来的消费者。我们将忽略Go RabbitMQ API中的一些细节，这里传递“Hello World”消息。<br>在下图中，“P”是生产者，“C”是消费者。中间的框是一个队列（保存消息的地方）。<br><img src="http://www.rabbitmq.com/img/tutorials/python-one.png" alt="(P) -&gt; [|||] -&gt; (C)"></p>
+<h2 id="Hello-World"><a href="#Hello-World" class="headerlink" title="Hello World!"></a>Hello World!</h2><p> <strong>（使用Go客户端）</strong></p>
+<p>在本教程的这一部分中，我们将在Go中编写两个小程序：发送单个消息的生产者，以及接收消息并将其打印出来的消费者。我们将忽略Go RabbitMQ API中的一些细节，这里传递“Hello World”消息。<br>在下图中，“P”是生产者，“C”是消费者。中间的框是一个队列（保存消息的地方）。<br><img src="http://www.rabbitmq.com/img/tutorials/python-one.png" alt="(P) -&gt; [|||] -&gt; (C)"></p>
 <blockquote>
 <p><strong>Go RabbitMQ客户端库</strong><br>RabbitMQ使用的是AMQP 0.9.1协议。这是一个用于消息传递的开放、通用的协议。针对不同编程语言有大量的RabbitMQ客户端可用。在本教程中，我们将使用Go amqp客户端。</p>
 </blockquote>
@@ -211,98 +207,32 @@
 <p>首先，使用<code>go get</code>安装amqp：<code>go get github.com/streadway/amqp</code></p>
 </blockquote>
 <h3 id="发送"><a href="#发送" class="headerlink" title="发送"></a>发送</h3><p><img src="http://www.rabbitmq.com/img/tutorials/sending.png" alt="(P) -&gt; [|||]"></p>
-<p>我们将编写消息发布者（发送者）<code>send.go</code>和我们的消息使用者（接收者）<code>receive.go</code>。<br>发布者将连接到RabbitMQ，发送单个消息，然后退出。<br>在<code>send.go</code>中，我们需要先导入包：</p>
-<pre><code>package main
+<p>我们将编写消息生产者（发送者）<code>send.go</code>和我们的消息消费者（接收者）<code>receive.go</code>。<br>发布者将连接到RabbitMQ，发送单个消息，然后退出。<br>在<code>send.go</code>中，我们需要先导入包：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">"log"</span></span><br><span class="line"></span><br><span class="line">  <span class="string">"github.com/streadway/amqp"</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
 
-import (
-  &quot;log&quot;
+<p>我们还需要一个辅助函数来检查每个amqp调用的返回值</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">failOnError</span><span class="params">(err error, msg <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    log.Fatalf(<span class="string">"%s: %s"</span>, msg, err)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-  &quot;github.com/streadway/amqp&quot;
-)</code></pre><p>我们还需要一个辅助函数来检查每个amqp调用的返回值</p>
-<pre><code>func failOnError(err error, msg string) {
-  if err != nil {
-    log.Fatalf(&quot;%s: %s&quot;, msg, err)
-  }
-}</code></pre><p>然后连接到RabbitMQ服务器</p>
-<pre><code>conn, err := amqp.Dial(&quot;amqp://guest:guest@localhost:5672/&quot;)
-failOnError(err, &quot;Failed to connect to RabbitMQ&quot;)
-defer conn.Close()</code></pre><p>配置连接套接字，它主要定义连接的协议和身份验证等。接下来，我们创建一个channel来传递消息：</p>
-<pre><code>ch, err := conn.Channel()
-failOnError(err, &quot;Failed to open a channel&quot;)
-defer ch.Close()</code></pre><p>发送前，我们必须声明一个队列供我们发送，然后才能向队列发送消息：</p>
-<pre><code>q, err := ch.QueueDeclare(
-  &quot;hello&quot;, // name
-  false,   // durable
-  false,   // delete when unused
-  false,   // exclusive
-  false,   // no-wait
-  nil,     // arguments
-)
-failOnError(err, &quot;Failed to declare a queue&quot;)
+<p>然后连接到RabbitMQ服务器</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">conn, err := amqp.Dial(<span class="string">"amqp://guest:guest@localhost:5672/"</span>)</span><br><span class="line">failOnError(err, <span class="string">"Failed to connect to RabbitMQ"</span>)</span><br><span class="line"><span class="keyword">defer</span> conn.Close()</span><br></pre></td></tr></table></figure>
 
-body := &quot;Hello World!&quot;
-err = ch.Publish(
-  &quot;&quot;,     // exchange
-  q.Name, // routing key
-  false,  // mandatory
-  false,  // immediate
-  amqp.Publishing {
-    ContentType: &quot;text/plain&quot;,
-    Body:        []byte(body),
-  })
-failOnError(err, &quot;Failed to publish a message&quot;)</code></pre><p>声明队列是幂等的——只有在它不存在的情况下才会创建它。消息内容是一个字节数组，因此你可以编写任何内容。<br><img src="http://www.rabbitmq.com/img/tutorials/receiving.png" alt="[|||] -&gt; (C)"></p>
+<p>配置连接套接字，它主要定义连接的协议和身份验证等。接下来，我们创建一个channel来传递消息：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ch, err := conn.Channel()</span><br><span class="line">failOnError(err, <span class="string">"Failed to open a channel"</span>)</span><br><span class="line"><span class="keyword">defer</span> ch.Close()</span><br></pre></td></tr></table></figure>
+
+<p>发送前，我们必须声明一个队列供我们发送，然后才能向队列发送消息：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">q, err := ch.QueueDeclare(</span><br><span class="line">  <span class="string">"hello"</span>, <span class="comment">// name</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// delete when unused</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// exclusive</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,     <span class="comment">// arguments</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to declare a queue"</span>)</span><br><span class="line"></span><br><span class="line">body := <span class="string">"Hello World!"</span></span><br><span class="line">err = ch.Publish(</span><br><span class="line">  <span class="string">""</span>,     <span class="comment">// exchange</span></span><br><span class="line">  q.Name, <span class="comment">// routing key</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// mandatory</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// immediate</span></span><br><span class="line">  amqp.Publishing &#123;</span><br><span class="line">    ContentType: <span class="string">"text/plain"</span>,</span><br><span class="line">    Body:        []<span class="keyword">byte</span>(body),</span><br><span class="line">  &#125;)</span><br><span class="line">failOnError(err, <span class="string">"Failed to publish a message"</span>)</span><br></pre></td></tr></table></figure>
+
+<p>声明队列是幂等的——只有在它不存在的情况下才会创建它。消息内容是一个字节数组，因此你可以编写任何内容。<br><img src="http://www.rabbitmq.com/img/tutorials/receiving.png" alt="[|||] -&gt; (C)"></p>
 <h3 id="接收"><a href="#接收" class="headerlink" title="接收"></a>接收</h3><p>以上是消息生产者。我们的消费者需要监听来自RabbitMQ的消息，因此与生产者不同，它需要持续运行以监听消息并将其打印出来<br><img src="http://pwzr2sh3s.bkt.clouddn.com/RabbitMQ/Hello%20World/6.png" alt><br>代码<code>receive.go</code>具有与send相同的导入包和辅助函数：</p>
-<pre><code>package main
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">"log"</span></span><br><span class="line"></span><br><span class="line">  <span class="string">"github.com/streadway/amqp"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">failOnError</span><span class="params">(err error, msg <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    log.Fatalf(<span class="string">"%s: %s"</span>, msg, err)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-import (
-  &quot;log&quot;
+<p>设置与生产者相同，首先打开一个连接和一个Channel，并声明我们要消费的队列。请注意，这与发送的队列相匹配</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">conn, err := amqp.Dial(<span class="string">"amqp://guest:guest@localhost:5672/"</span>)</span><br><span class="line">failOnError(err, <span class="string">"Failed to connect to RabbitMQ"</span>)</span><br><span class="line"><span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">ch, err := conn.Channel()</span><br><span class="line">failOnError(err, <span class="string">"Failed to open a channel"</span>)</span><br><span class="line"><span class="keyword">defer</span> ch.Close()</span><br><span class="line"></span><br><span class="line">q, err := ch.QueueDeclare(</span><br><span class="line">  <span class="string">"hello"</span>, <span class="comment">// name</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// delete when usused</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// exclusive</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,     <span class="comment">// arguments</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to declare a queue"</span>)</span><br></pre></td></tr></table></figure>
 
-  &quot;github.com/streadway/amqp&quot;
-)
+<p>注意，在这里也做了队列声明。因为消费者可能在生产者启动前就运行了，所以要确保使用消息之前队列已经存在。<br>我们即将告诉服务器从队列中传递消息。因为它会异步地向我们发送消息，所以我们将在goroutine中读取来自channel （由<code>amqp :: Consume</code>返回）的消息。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">msgs, err := ch.Consume(</span><br><span class="line">  q.Name, <span class="comment">// queue</span></span><br><span class="line">  <span class="string">""</span>,     <span class="comment">// consumer</span></span><br><span class="line">  <span class="literal">true</span>,   <span class="comment">// auto-ack</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// exclusive</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// no-local</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,    <span class="comment">// args</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to register a consumer"</span>)</span><br><span class="line"></span><br><span class="line">forever := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">bool</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">  <span class="keyword">for</span> d := <span class="keyword">range</span> msgs &#123;</span><br><span class="line">    log.Printf(<span class="string">"Received a message: %s"</span>, d.Body)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;()</span><br><span class="line"></span><br><span class="line">log.Printf(<span class="string">" [*] Waiting for messages. To exit press CTRL+C"</span>)</span><br><span class="line">&lt;-forever</span><br></pre></td></tr></table></figure>
 
-func failOnError(err error, msg string) {
-  if err != nil {
-    log.Fatalf(&quot;%s: %s&quot;, msg, err)
-  }
-}</code></pre><p>设置与生产者相同，首先打开一个连接和一个Channel，并声明我们要消费的队列。请注意，这与发送的队列相匹配</p>
-<pre><code>conn, err := amqp.Dial(&quot;amqp://guest:guest@localhost:5672/&quot;)
-failOnError(err, &quot;Failed to connect to RabbitMQ&quot;)
-defer conn.Close()
-
-ch, err := conn.Channel()
-failOnError(err, &quot;Failed to open a channel&quot;)
-defer ch.Close()
-
-q, err := ch.QueueDeclare(
-  &quot;hello&quot;, // name
-  false,   // durable
-  false,   // delete when usused
-  false,   // exclusive
-  false,   // no-wait
-  nil,     // arguments
-)
-failOnError(err, &quot;Failed to declare a queue&quot;)</code></pre><p>注意，在这里也做了队列声明。因为消费者可能在生产者启动前就运行了，所以要确保使用消息之前队列已经存在。<br>我们即将告诉服务器从队列中传递消息。因为它会异步地向我们发送消息，所以我们将在goroutine中读取来自channel （由<code>amqp :: Consume</code>返回）的消息。</p>
-<pre><code>msgs, err := ch.Consume(
-  q.Name, // queue
-  &quot;&quot;,     // consumer
-  true,   // auto-ack
-  false,  // exclusive
-  false,  // no-local
-  false,  // no-wait
-  nil,    // args
-)
-failOnError(err, &quot;Failed to register a consumer&quot;)
-
-forever := make(chan bool)
-
-go func() {
-  for d := range msgs {
-    log.Printf(&quot;Received a message: %s&quot;, d.Body)
-  }
-}()
-
-log.Printf(&quot; [*] Waiting for messages. To exit press CTRL+C&quot;)
-&lt;-forever</code></pre><p><a href="https://github.com/rabbitmq/rabbitmq-tutorials/blob/master/go/receive.go" target="_blank" rel="noopener">receive.go</a></p>
+<p><a href="https://github.com/rabbitmq/rabbitmq-tutorials/blob/master/go/receive.go" target="_blank" rel="noopener">receive.go</a></p>
 <h3 id="代码整合"><a href="#代码整合" class="headerlink" title="代码整合"></a>代码整合</h3><p>运行生产者：<code>go run send.go</code><br>运行消费者：<code>go run receive.go</code><br>消费者将通过RabbitMQ打印从生产者处获得的消息。消费者将继续运行，等待消息（使用Ctrl-C停止消息）。可以尝试从另一个终端再次运行生产者来发送消息。</p>
 <p>我们已经学会如何发送消息到一个已知队列中并接收消息。是时候移步到第二部分了，我们将会建立一个简单的工作队列（work queue）。</p>
 <blockquote>
