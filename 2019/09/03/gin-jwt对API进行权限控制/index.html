@@ -6,15 +6,22 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>烟花易冷的博客</title>
+  <title>gin-jwt对API进行权限控制 | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="烟花易冷的博客">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="前言之前文章简单介绍了如何运行gin+vue的前后端分离开源项目，该项目是学习了Gin实践教程后结合vue-element-admin写的，该教程讲得很详细，适合入门Gin。本篇文章将介绍gin+vue的前后端分离开源项目中如何使用gin-jwt对API进行权限验证。">
+<meta name="keywords" content="gin">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gin-jwt对API进行权限控制">
+<meta property="og:url" content="http://yoursite.com/2019/09/03/gin-jwt对API进行权限控制/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
+<meta property="og:description" content="前言之前文章简单介绍了如何运行gin+vue的前后端分离开源项目，该项目是学习了Gin实践教程后结合vue-element-admin写的，该教程讲得很详细，适合入门Gin。本篇文章将介绍gin+vue的前后端分离开源项目中如何使用gin-jwt对API进行权限验证。">
 <meta property="og:locale" content="en">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-9-3/1.png">
+<meta property="og:updated_time" content="2019-09-03T13:19:52.321Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="烟花易冷的博客">
+<meta name="twitter:title" content="gin-jwt对API进行权限控制">
+<meta name="twitter:description" content="前言之前文章简单介绍了如何运行gin+vue的前后端分离开源项目，该项目是学习了Gin实践教程后结合vue-element-admin写的，该教程讲得很详细，适合入门Gin。本篇文章将介绍gin+vue的前后端分离开源项目中如何使用gin-jwt对API进行权限验证。">
+<meta name="twitter:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-9-3/1.png">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -152,35 +159,14 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-    
-  
-  
-    <article id="post-gin-jwt对API进行权限控制" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+            <article id="post-gin-jwt对API进行权限控制" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/09/03/gin-jwt对API进行权限控制/">gin-jwt对API进行权限控制</a>
+    <h1 class="article-title" itemprop="name">
+      gin-jwt对API进行权限控制
     </h1>
   
 
@@ -194,9 +180,89 @@
     <div class="article-entry" itemprop="articleBody">
       
         <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>之前文章简单介绍了如何运行<a href="https://bingjian-zhu.github.io/2019/08/27/gin+vue%E7%9A%84%E5%89%8D%E5%90%8E%E7%AB%AF%E5%88%86%E7%A6%BB%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE/" target="_blank" rel="noopener">gin+vue的前后端分离开源项目</a>，该项目是学习了<a href="https://github.com/EDDYCJY/go-gin-example/blob/master/README_ZH.md" target="_blank" rel="noopener">Gin实践教程</a>后结合vue-element-admin写的，该教程讲得很详细，适合入门Gin。本篇文章将介绍gin+vue的前后端分离开源项目中如何使用gin-jwt对API进行权限验证。</p>
-        
+<a id="more"></a>
+<h3 id="安装gin-jwt"><a href="#安装gin-jwt" class="headerlink" title="安装gin-jwt"></a>安装gin-jwt</h3><p>在GOPATH目录下运行</p>
+<pre><code>go get github.com/appleboy/gin-jwt</code></pre><h3 id="初始化jwt中间件"><a href="#初始化jwt中间件" class="headerlink" title="初始化jwt中间件"></a>初始化jwt中间件</h3><p>gin-jwt已经帮我们封装成中间件了，我们只需要设置并实例化它就可以直接用了。<br>现在来看看项目中middleware/myjwt/gin_jwt.go文件：</p>
+<p>总的就是调用<code>jwt.New</code>函数来实例化一个<code>jwt.GinJWTMiddleware</code></p>
+<p>然后我们看下<code>jwt.GinJWTMiddleware</code>中定义的属性和方法</p>
+<ul>
+<li><p><code>TokenLookup</code>：token检索模式，用于提取token，默认值为<code>header:Authorization</code>。</p>
+</li>
+<li><p><code>SigningAlgorithm</code>：签名算法，默认值为<code>HS256</code></p>
+</li>
+<li><p><code>Timeout</code>：token过期时间，默认值为<code>time.Hour</code></p>
+</li>
+<li><p><code>TimeFunc</code>：测试或服务器在其他时区可设置该属性，默认值为<code>time.Now</code></p>
+</li>
+<li><p><code>TokenHeadName</code>：token在请求头时的名称，默认值为<code>Bearer</code></p>
+</li>
+<li><p><code>IdentityKey</code>：身份验证的key值，默认值为<code>identity</code></p>
+</li>
+<li><p><code>Realm</code>：可以理解成该中间件的名称，用于展示，默认值为<code>gin jwt</code></p>
+</li>
+<li><p><code>CookieName</code>：Cookie名称，默认值为<code>jwt</code></p>
+</li>
+<li><p><code>privKey</code>：私钥</p>
+</li>
+<li><p><code>pubKey</code>：公钥</p>
+</li>
+<li><p><code>Authenticator</code>函数：根据登录信息对用户进行身份验证的回调函数</p>
+</li>
+<li><p><code>PayloadFunc</code>函数：登录期间的回调的函数</p>
+</li>
+<li><p><code>IdentityHandler</code>函数：解析并设置用户身份信息</p>
+</li>
+<li><p><code>Authorizator</code>函数：接收用户信息并编写授权规则，本项目的API权限控制就是通过该函数编写授权规则的</p>
+</li>
+<li><p><code>Unauthorized</code>函数：处理不进行授权的逻辑</p>
+</li>
+<li><p><code>LoginResponse</code>函数：完成登录后返回的信息，用户可自定义返回数据，默认返回</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"code"</span>: http.StatusOK,</span><br><span class="line">  <span class="attr">"token"</span>: token,</span><br><span class="line">  <span class="attr">"expire"</span>: expire.Format(time.RFC3339)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>RefreshResponse</code>函数：刷新token后返回的信息，用户可自定义返回数据，默认返回</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"code"</span>: http.StatusOK,</span><br><span class="line">  <span class="attr">"token"</span>: token,</span><br><span class="line">  <span class="attr">"expire"</span>: expire.Format(time.RFC3339)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>到这里我们应该就知道如何使用这个中间件了。</p>
+<h3 id="使用中间件"><a href="#使用中间件" class="headerlink" title="使用中间件"></a>使用中间件</h3><p>实例化中间件后，直接在路由组中使用该中间件就可以了<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-9-3/1.png" alt="enter image description here"></p>
+<blockquote>
+<p>源码地址：<a href="https://github.com/Bingjian-Zhu/gin-vue" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/gin-vue</a></p>
+</blockquote>
+
       
 
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/alipay.JPG">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/wechatpay.JPG">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
       
     </div>
     <div class="article-info article-info-index">
@@ -216,16 +282,75 @@
       
 
       
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/09/03/gin-jwt对API进行权限控制/">展开全文 >></a>
-        </p>
-      
 
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/03/gin-jwt对API进行权限控制/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
       
       <div class="clearfix"></div>
     </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
+  
+  
+    <a href="/2019/09/01/RabbitMQ消息可靠性分析和应用/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">RabbitMQ消息可靠性分析和应用</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
 
 <aside class="wrap-side-operation">
     <div class="mod-side-operation">
@@ -240,691 +365,48 @@
         </div>
         
         
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-RabbitMQ消息可靠性分析和应用" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/09/01/RabbitMQ消息可靠性分析和应用/">RabbitMQ消息可靠性分析和应用</a>
-    </h1>
-  
-
-        
-        <a href="/2019/09/01/RabbitMQ消息可靠性分析和应用/" class="archive-article-date">
-  	<time datetime="2019-09-01T15:16:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="一、RabbitMQ流程简介（带Exchange）"><a href="#一、RabbitMQ流程简介（带Exchange）" class="headerlink" title="一、RabbitMQ流程简介（带Exchange）"></a>一、RabbitMQ流程简介（带Exchange）</h3><p>RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。</p>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/09/01/RabbitMQ消息可靠性分析和应用/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#安装gin-jwt"><span class="toc-number">2.</span> <span class="toc-text">安装gin-jwt</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#初始化jwt中间件"><span class="toc-number">3.</span> <span class="toc-text">初始化jwt中间件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用中间件"><span class="toc-number">4.</span> <span class="toc-text">使用中间件</span></a></li></ol>
+                    </div>
+                </span>
             </div>
         </div>
         
-        
     </div>
 </aside>
 
 
 
-
-  
-    <article id="post-RabbitMQ教程（译）-RPC" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/09/01/RabbitMQ教程（译）-RPC/">RabbitMQ教程（译）-RPC</a>
-    </h1>
-  
-
-        
-        <a href="/2019/09/01/RabbitMQ教程（译）-RPC/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:06:34.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="远程过程调用（RPC）"><a href="#远程过程调用（RPC）" class="headerlink" title="远程过程调用（RPC）"></a>远程过程调用（RPC）</h2><p><strong>（使用Go客户端）</strong></p>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/09/01/RabbitMQ教程（译）-RPC/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-RabbitMQ教程（译）-Topics" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/09/01/RabbitMQ教程（译）-Topics/">RabbitMQ教程（译）-Topics</a>
-    </h1>
-  
-
-        
-        <a href="/2019/09/01/RabbitMQ教程（译）-Topics/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:05:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="为什么需要topic交换机？"><a href="#为什么需要topic交换机？" class="headerlink" title="为什么需要topic交换机？"></a>为什么需要topic交换机？</h2><p><strong>（使用Go客户端）</strong></p>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/09/01/RabbitMQ教程（译）-Topics/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-RabbitMQ教程（译）-Routing" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/09/01/RabbitMQ教程（译）-Routing/">RabbitMQ教程（译）-Routing</a>
-    </h1>
-  
-
-        
-        <a href="/2019/09/01/RabbitMQ教程（译）-Routing/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:05:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="路由-Routing"><a href="#路由-Routing" class="headerlink" title="路由(Routing)"></a>路由(Routing)</h2><p><strong>（使用Go客户端）</strong></p>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/09/01/RabbitMQ教程（译）-Routing/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-RabbitMQ教程（译）-Publish-Subscribe" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/09/01/RabbitMQ教程（译）-Publish-Subscribe/">RabbitMQ教程（译）-Publish/Subscribe</a>
-    </h1>
-  
-
-        
-        <a href="/2019/09/01/RabbitMQ教程（译）-Publish-Subscribe/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:04:55.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="发布／订阅"><a href="#发布／订阅" class="headerlink" title="发布／订阅"></a>发布／订阅</h2><p><strong>（使用Go客户端）</strong></p>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/09/01/RabbitMQ教程（译）-Publish-Subscribe/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-RabbitMQ教程（译）-Work-queues" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/09/01/RabbitMQ教程（译）-Work-queues/">RabbitMQ教程（译）-Work queues</a>
-    </h1>
-  
-
-        
-        <a href="/2019/09/01/RabbitMQ教程（译）-Work-queues/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:04:34.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="工作队列"><a href="#工作队列" class="headerlink" title="工作队列"></a>工作队列</h2><p><strong>（使用Go客户端）</strong></p>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/09/01/RabbitMQ教程（译）-Work-queues/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-RabbitMQ教程（译）-Hello-World" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/09/01/RabbitMQ教程（译）-Hello-World/">RabbitMQ教程（译）-Hello World</a>
-    </h1>
-  
-
-        
-        <a href="/2019/09/01/RabbitMQ教程（译）-Hello-World/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:03:45.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h2><blockquote>
-<p>本教程假设RabbitMQ已经安装在你本机的 (5672)端口。如果你使用了不同的主机、端口或者凭证，连接设置就需要作出一些对应的调整。</p>
-</blockquote>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/09/01/RabbitMQ教程（译）-Hello-World/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-Docker镜像优化" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/29/Docker镜像优化/">Docker镜像优化</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/29/Docker镜像优化/" class="archive-article-date">
-  	<time datetime="2019-08-29T15:36:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><blockquote>
-<p><a href="https://bingjian-zhu.github.io/2019/08/28/%E4%BD%BF%E7%94%A8Docker%E9%83%A8%E7%BD%B2NET-Core%E7%A8%8B%E5%BA%8F/" target="_blank" rel="noopener">上篇博文</a>说到使用Visual Studio Tools for Docker帮助我们生成Dockerfile，现在我们讨论下生成的Dockerfile的优劣。</p>
-</blockquote>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">docker</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/29/Docker镜像优化/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-使用Docker部署NET-Core程序" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/28/使用Docker部署NET-Core程序/">使用Docker部署.NET Core程序</a>
-    </h1>
-  
-
-        
-        <a href="/2019/08/28/使用Docker部署NET-Core程序/" class="archive-article-date">
-  	<time datetime="2019-08-28T15:15:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-28</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="一、Docker简介"><a href="#一、Docker简介" class="headerlink" title="一、Docker简介"></a>一、Docker简介</h3><p>Docker是基于Linux容器技术（LXC），使用Go语言实现的开源项目，诞生于2013年，遵循Apache2.0协议。Docker自开源后，受到广泛的关注和讨论。</p>
-        
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">docker</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">.NET Core</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/28/使用Docker部署NET-Core程序/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
   
   
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
-    </nav>
+  
+
+  
+
+  
+
+  
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+<script src="https://billts.site/js/gitment.js"></script>
+<script>
+var gitment = new Gitment({
+  id: 'Tue Sep 03 2019 21:18:49 GMT+0800',
+  owner: 'Bingjian-Zhu',
+  repo: 'Bingjian-Zhu.github.io',
+  oauth: {
+    client_id: 'ea0e7d1f85b69731c83e',
+    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
   
 
 
@@ -947,8 +429,8 @@
     <script>
 	var yiliaConfig = {
 		mathjax: false,
-		isHome: true,
-		isPost: false,
+		isHome: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,
