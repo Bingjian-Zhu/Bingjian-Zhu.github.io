@@ -6,28 +6,15 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>gin+vue的前后端分离开源项目 | 烟花易冷的博客</title>
+  <title>Tag: Go | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="keywords" content="gin,vue">
-<meta property="og:type" content="article">
-<meta property="og:title" content="gin+vue的前后端分离开源项目">
-<meta property="og:url" content="http://yoursite.com/2019/08/27/gin+vue的前后端分离开源项目/index.html">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="烟花易冷的博客">
+<meta property="og:url" content="http://yoursite.com/tags/Go/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/1.gif">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/2.png">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/3.png">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/4.png">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/5.png">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/6.gif">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/7.gif">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/8.gif">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/9.png">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/10.png">
-<meta property="og:updated_time" content="2019-09-09T13:30:32.063Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="gin+vue的前后端分离开源项目">
-<meta name="twitter:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/1.gif">
+<meta name="twitter:title" content="烟花易冷的博客">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -165,231 +152,60 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-gin+vue的前后端分离开源项目" class="article article-type-post " itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      gin+vue的前后端分离开源项目
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2019" class="archive-year">2019</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2019/09/11/线程实现模型/" class="archive-article-date">
+  	<time datetime="2019-09-11T11:50:31.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-11</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2019/09/11/线程实现模型/">线程实现模型</a>
     </h1>
   
 
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <hr>
-<p><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/1.gif" alt></p>
-<a id="more"></a>
-<p>该项目是gin+vue的前后端分离项目，使用gorm访问MySQL，其中vue前端是使用<a href="https://panjiachen.github.io/vue-element-admin-site/" target="_blank" rel="noopener">vue-element-admin</a>框架简单实现的；<br>go后台使用jwt，对API接口进行权限控制。此外，Web页面在token过期后的半个小时内，用户再次操作会自动刷新token；<br>项目很小，适合gin新手学习！（后续有时间会补上相关教程）</p>
-<p>GitHub地址：<a href="https://github.com/Bingjian-Zhu/gin-vue" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/gin-vue</a></p>
-<h3 id="一、运行go后台项目"><a href="#一、运行go后台项目" class="headerlink" title="一、运行go后台项目"></a>一、运行go后台项目</h3><p>（1）克隆项目<br>把项目clone到GOPATH/src目录下#<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/2.png" alt></p>
-<p>（2）建立数据库<br>在MySQL中新建blog数据库，运行文件夹/docs/sql中的mysql.sql脚本<br>（3）修改数据库配置<br>在文件夹/conf中修改配置文件api.ini中的数据库连接配置<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/3.png" alt><br>（4）运行项目<br>在gin-vue目录下运行：<code>go run main.go</code><br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/4.png" alt></p>
-<p>（5）可能遇到的问题</p>
-<blockquote>
-<p>如果在GitHub是用下载压缩包的形式，解压后请把文件夹gin-vue-master重名为gin-vue，然后再复制到/GOPATH/src目录下</p>
-</blockquote>
-<h3 id="二、使用Postman测试API接口"><a href="#二、使用Postman测试API接口" class="headerlink" title="二、使用Postman测试API接口"></a>二、使用Postman测试API接口</h3><p>（1）登录<br>token过期时间设为5分钟<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/5.png" alt><br>（2）测试接口<br>使用token调用API接口<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/6.gif" alt><br>（3）API权限验证<br>当使用admin登录获取的token调用/api/v1/table/list接口时，能获取到数据<br>改用test用户登录获取的token调用/api/v1/table/list接口时，返回403，没有权限<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/7.gif" alt><br>（4）刷新token<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/8.gif" alt><br>（5）查看接口运行的时间<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/9.png" alt></p>
-<h3 id="三、运行vue-admin项目"><a href="#三、运行vue-admin项目" class="headerlink" title="三、运行vue-admin项目"></a>三、运行vue-admin项目</h3><p>（1）初始化项目<br>在/gin-vue/vue-admin目录下运行：<code>npm install</code><br>（2）运行项目<br>运行：<code>npm run dev</code><br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/10.png" alt><br>浏览器自动打开 <a href="http://localhost:9528/#/login?redirect=%2Fdashboard" target="_blank" rel="noopener">http://localhost:9528/#/login?redirect=%2Fdashboard</a><br>然后就可以像文章开头的动图一样玩了</p>
-<h3 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h3><p>初步体验了gin框架，总体上还是可以的</p>
-<blockquote>
-<p>再次附上源码地址：<a href="https://github.com/Bingjian-Zhu/gin-vue" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/gin-vue</a><br>喜欢的请star</p>
-</blockquote>
-
-      
-
-      
-        <div class="page-reward">
-          <a href="javascript:;" class="page-reward-btn tooltip-top">
-            <div class="tooltip tooltip-east">
-            <span class="tooltip-item">
-              赏
-            </span>
-            <span class="tooltip-content">
-              <span class="tooltip-text">
-                <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
-                  <div class="reward-box">
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/alipay.JPG">
-                      <span class="reward-type">支付宝</span>
-                    </div>
-                    
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://pwzr2sh3s.bkt.clouddn.com/pay/wechatpay.JPG">
-                      <span class="reward-type">微信</span>
-                    </div>
-                    
-                  </div>
-                </span>
-              </span>
-            </span>
-          </div>
-          </a>
-        </div>
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-        <div class="article-pop-out tagcloud">
-          <i class="icon-tuding"></i>
-          <a class="article-tag-list-link color3">置顶</a>
-        </div>
-      
-      
+        <div class="article-info info-on-right">
+          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gin</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">vue</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
         		</li>
       		
 		</ul>
 	</div>
 
-      
+          
 
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/08/27/gin+vue的前后端分离开源项目/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
-  
-<nav id="article-nav">
-  
-    <a href="/2019/08/28/使用Docker部署NET-Core程序/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          使用Docker部署.NET Core程序
-        
-      </div>
-    </a>
   
   
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-        <div class="toc-container tooltip-left">
-            <i class="icon-font icon-category"></i>
-            <div class="tooltip tooltip-east">
-                <span class="tooltip-item">
-                </span>
-                <span class="tooltip-content">
-                    <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一、运行go后台项目"><span class="toc-number">1.</span> <span class="toc-text">一、运行go后台项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二、使用Postman测试API接口"><span class="toc-number">2.</span> <span class="toc-text">二、使用Postman测试API接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三、运行vue-admin项目"><span class="toc-number">3.</span> <span class="toc-text">三、运行vue-admin项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四、总结"><span class="toc-number">4.</span> <span class="toc-text">四、总结</span></a></li></ol>
-                    </div>
-                </span>
-            </div>
-        </div>
-        
-    </div>
-</aside>
-
-
-
-  
-  
+    </div></section>
   
 
-  
-
-  
-
-  
-  <div id="gitment-ctn"></div> 
-<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
-<script src="https://billts.site/js/gitment.js"></script>
-<script>
-var gitment = new Gitment({
-  id: 'Tue Aug 27 2019 10:28:49 GMT+0800',
-  owner: 'Bingjian-Zhu',
-  repo: 'Bingjian-Zhu.github.io',
-  oauth: {
-    client_id: 'ea0e7d1f85b69731c83e',
-    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
-  },
-})
-gitment.render('gitment-ctn')
-</script>
-  
+    
 
 
           </div>
@@ -412,9 +228,9 @@ gitment.render('gitment-ctn')
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
+		isPost: false,
 		isArchive: false,
-		isTag: false,
+		isTag: true,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,

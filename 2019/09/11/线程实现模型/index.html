@@ -6,28 +6,24 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>gin+vue的前后端分离开源项目 | 烟花易冷的博客</title>
+  <title>线程实现模型 | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="keywords" content="gin,vue">
+  <meta name="description" content="线程实现模型线程实现模型主要分为：用户级线程模型，内核级线程模型和两级线程模型。他们的区别在于线程与内核线程之间的对应关系。">
+<meta name="keywords" content="Go">
 <meta property="og:type" content="article">
-<meta property="og:title" content="gin+vue的前后端分离开源项目">
-<meta property="og:url" content="http://yoursite.com/2019/08/27/gin+vue的前后端分离开源项目/index.html">
+<meta property="og:title" content="线程实现模型">
+<meta property="og:url" content="http://yoursite.com/2019/09/11/线程实现模型/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
+<meta property="og:description" content="线程实现模型线程实现模型主要分为：用户级线程模型，内核级线程模型和两级线程模型。他们的区别在于线程与内核线程之间的对应关系。">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/1.gif">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/2.png">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/3.png">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/4.png">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/5.png">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/6.gif">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/7.gif">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/8.gif">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/9.png">
-<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/10.png">
-<meta property="og:updated_time" content="2019-09-09T13:30:32.063Z">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/goroutine/2019-9-11/1.png">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/goroutine/2019-9-11/2.png">
+<meta property="og:image" content="http://pwzr2sh3s.bkt.clouddn.com/goroutine/2019-9-11/3.png">
+<meta property="og:updated_time" content="2019-09-11T11:54:08.645Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="gin+vue的前后端分离开源项目">
-<meta name="twitter:image" content="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/1.gif">
+<meta name="twitter:title" content="线程实现模型">
+<meta name="twitter:description" content="线程实现模型线程实现模型主要分为：用户级线程模型，内核级线程模型和两级线程模型。他们的区别在于线程与内核线程之间的对应关系。">
+<meta name="twitter:image" content="http://pwzr2sh3s.bkt.clouddn.com/goroutine/2019-9-11/1.png">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -165,39 +161,32 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-gin+vue的前后端分离开源项目" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-线程实现模型" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      gin+vue的前后端分离开源项目
+      线程实现模型
     </h1>
   
 
+        
+        <a href="/2019/09/11/线程实现模型/" class="archive-article-date">
+  	<time datetime="2019-09-11T11:50:31.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-11</time>
+</a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <hr>
-<p><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/1.gif" alt></p>
+        <h3 id="线程实现模型"><a href="#线程实现模型" class="headerlink" title="线程实现模型"></a>线程实现模型</h3><p>线程实现模型主要分为：<code>用户级线程模型</code>，<code>内核级线程模型</code>和<code>两级线程模型</code>。他们的区别在于线程与内核线程之间的对应关系。</p>
 <a id="more"></a>
-<p>该项目是gin+vue的前后端分离项目，使用gorm访问MySQL，其中vue前端是使用<a href="https://panjiachen.github.io/vue-element-admin-site/" target="_blank" rel="noopener">vue-element-admin</a>框架简单实现的；<br>go后台使用jwt，对API接口进行权限控制。此外，Web页面在token过期后的半个小时内，用户再次操作会自动刷新token；<br>项目很小，适合gin新手学习！（后续有时间会补上相关教程）</p>
-<p>GitHub地址：<a href="https://github.com/Bingjian-Zhu/gin-vue" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/gin-vue</a></p>
-<h3 id="一、运行go后台项目"><a href="#一、运行go后台项目" class="headerlink" title="一、运行go后台项目"></a>一、运行go后台项目</h3><p>（1）克隆项目<br>把项目clone到GOPATH/src目录下#<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/2.png" alt></p>
-<p>（2）建立数据库<br>在MySQL中新建blog数据库，运行文件夹/docs/sql中的mysql.sql脚本<br>（3）修改数据库配置<br>在文件夹/conf中修改配置文件api.ini中的数据库连接配置<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/3.png" alt><br>（4）运行项目<br>在gin-vue目录下运行：<code>go run main.go</code><br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/4.png" alt></p>
-<p>（5）可能遇到的问题</p>
-<blockquote>
-<p>如果在GitHub是用下载压缩包的形式，解压后请把文件夹gin-vue-master重名为gin-vue，然后再复制到/GOPATH/src目录下</p>
-</blockquote>
-<h3 id="二、使用Postman测试API接口"><a href="#二、使用Postman测试API接口" class="headerlink" title="二、使用Postman测试API接口"></a>二、使用Postman测试API接口</h3><p>（1）登录<br>token过期时间设为5分钟<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/5.png" alt><br>（2）测试接口<br>使用token调用API接口<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/6.gif" alt><br>（3）API权限验证<br>当使用admin登录获取的token调用/api/v1/table/list接口时，能获取到数据<br>改用test用户登录获取的token调用/api/v1/table/list接口时，返回403，没有权限<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/7.gif" alt><br>（4）刷新token<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/8.gif" alt><br>（5）查看接口运行的时间<br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/9.png" alt></p>
-<h3 id="三、运行vue-admin项目"><a href="#三、运行vue-admin项目" class="headerlink" title="三、运行vue-admin项目"></a>三、运行vue-admin项目</h3><p>（1）初始化项目<br>在/gin-vue/vue-admin目录下运行：<code>npm install</code><br>（2）运行项目<br>运行：<code>npm run dev</code><br><img src="http://pwzr2sh3s.bkt.clouddn.com/gin/2019-8-27/10.png" alt><br>浏览器自动打开 <a href="http://localhost:9528/#/login?redirect=%2Fdashboard" target="_blank" rel="noopener">http://localhost:9528/#/login?redirect=%2Fdashboard</a><br>然后就可以像文章开头的动图一样玩了</p>
-<h3 id="四、总结"><a href="#四、总结" class="headerlink" title="四、总结"></a>四、总结</h3><p>初步体验了gin框架，总体上还是可以的</p>
-<blockquote>
-<p>再次附上源码地址：<a href="https://github.com/Bingjian-Zhu/gin-vue" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/gin-vue</a><br>喜欢的请star</p>
-</blockquote>
+<p>以下我们将分析这三种线程实现模型的特点：</p>
+<h4 id="用户级线程模型"><a href="#用户级线程模型" class="headerlink" title="用户级线程模型"></a>用户级线程模型</h4><p>（1）多对一关系<br>用户级线程模型为多对一关系。即，一个进程中的所有线程对应一个内核线程；<br>（2）处理速度快、移植性强；<br>线程的创建、调度、同步等操作由应用程序来处理，不需要让CPU从用户态切换到内核态。所以用户级线程模型在速度快，且移植性强；<br>（3）并非真正的并发运行<br>如果线程IO操作过程中被阻塞，那么用户空间的其他线程都会被阻塞，因为这些线程无法被内核调度。<br><img src="http://pwzr2sh3s.bkt.clouddn.com/goroutine/2019-9-11/1.png" alt="enter image description here"></p>
+<h4 id="内核级线程模型"><a href="#内核级线程模型" class="headerlink" title="内核级线程模型"></a>内核级线程模型</h4><p>（1）一对一关系<br>内核级线程模型为一对一关系，一个用户线程对应一个内核线程；<br>（2）资源消耗较大，速度较慢<br>进程对线程的创建、终止、切换和同步都必须通过内核提供的系统调用来完成，对内核的调度的调度器造成很大的负担；<br>（3）是真正的并发运行<br>用户线程和内核线程是一对一的关系，线程由内核来管理和调度。当某一线程阻塞时候，不会影响到其他线程。<br><img src="http://pwzr2sh3s.bkt.clouddn.com/goroutine/2019-9-11/2.png" alt="enter image description here"></p>
+<h4 id="两级线程模型"><a href="#两级线程模型" class="headerlink" title="两级线程模型"></a>两级线程模型</h4><p>（1）多对多的关系<br>两级线程模型是集前面两种模型的优点而设计的，是多对多的关系；<br>（2）资源消耗较小，速度较快，是真正的并发运行<br>两级线程模型中，一个进程对应多个内核线程，进程中的线程由程序管理和调度并通过映射关系映射到内核线程上。这样即便有线程阻塞后，也不会影响到其他线程；<br>（3）实现的复杂度大<br>用户线程与内核线程的映射关系需要程序来实现，实现的复杂度大。幸运的是，Golang为我们实现了两级线程模型，这使得它在处理并发问题上更有优势。<br><img src="http://pwzr2sh3s.bkt.clouddn.com/goroutine/2019-9-11/3.png" alt="enter image description here"></p>
 
       
 
@@ -236,22 +225,13 @@
     </div>
     <div class="article-info article-info-index">
       
-        <div class="article-pop-out tagcloud">
-          <i class="icon-tuding"></i>
-          <a class="article-tag-list-link color3">置顶</a>
-        </div>
-      
       
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gin</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">vue</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
         		</li>
       		
 		</ul>
@@ -307,7 +287,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/08/27/gin+vue的前后端分离开源项目/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/11/线程实现模型/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -321,15 +301,11 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/08/28/使用Docker部署NET-Core程序/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          使用Docker部署.NET Core程序
-        
-      </div>
-    </a>
   
+    <a href="/2019/09/05/录音并实时监测音量大小/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">录音并实时监测音量大小</div>
+      <i class="icon-circle-right"></i>
+    </a>
   
 </nav>
 
@@ -354,7 +330,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一、运行go后台项目"><span class="toc-number">1.</span> <span class="toc-text">一、运行go后台项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二、使用Postman测试API接口"><span class="toc-number">2.</span> <span class="toc-text">二、使用Postman测试API接口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三、运行vue-admin项目"><span class="toc-number">3.</span> <span class="toc-text">三、运行vue-admin项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四、总结"><span class="toc-number">4.</span> <span class="toc-text">四、总结</span></a></li></ol>
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#线程实现模型"><span class="toc-number">1.</span> <span class="toc-text">线程实现模型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#用户级线程模型"><span class="toc-number">1.1.</span> <span class="toc-text">用户级线程模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#内核级线程模型"><span class="toc-number">1.2.</span> <span class="toc-text">内核级线程模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#两级线程模型"><span class="toc-number">1.3.</span> <span class="toc-text">两级线程模型</span></a></li></ol></li></ol>
                     </div>
                 </span>
             </div>
@@ -379,7 +355,7 @@
 <script src="https://billts.site/js/gitment.js"></script>
 <script>
 var gitment = new Gitment({
-  id: 'Tue Aug 27 2019 10:28:49 GMT+0800',
+  id: 'Wed Sep 11 2019 19:50:31 GMT+0800',
   owner: 'Bingjian-Zhu',
   repo: 'Bingjian-Zhu.github.io',
   oauth: {
