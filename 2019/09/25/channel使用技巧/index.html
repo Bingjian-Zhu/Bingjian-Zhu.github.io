@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: vue | 烟花易冷的博客</title>
+  <title>Channel使用技巧 | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="烟花易冷的博客">
-<meta property="og:url" content="http://yoursite.com/tags/vue/index.html">
+  <meta name="description" content="巧用channel前言Go协程一般使用channel（通道）通信从而协调/同步他们的工作。合理利用Go协程和channel能帮助我们大大提高程序的性能。本文将介绍一些使用channel的场景及技巧">
+<meta name="keywords" content="Go,Channel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Channel使用技巧">
+<meta property="og:url" content="http://yoursite.com/2019/09/25/channel使用技巧/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
+<meta property="og:description" content="巧用channel前言Go协程一般使用channel（通道）通信从而协调/同步他们的工作。合理利用Go协程和channel能帮助我们大大提高程序的性能。本文将介绍一些使用channel的场景及技巧">
 <meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-09-25T12:26:18.295Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="烟花易冷的博客">
+<meta name="twitter:title" content="Channel使用技巧">
+<meta name="twitter:description" content="巧用channel前言Go协程一般使用channel（通道）通信从而协调/同步他们的工作。合理利用Go协程和channel能帮助我们大大提高程序的性能。本文将介绍一些使用channel的场景及技巧">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -152,64 +157,244 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-channel使用技巧" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/08/27/gin+vue的前后端分离开源项目/" class="archive-article-date">
-  	<time datetime="2019-08-27T02:28:49.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-27</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/08/27/gin+vue的前后端分离开源项目/">gin+vue的前后端分离开源项目</a>
+    <h1 class="article-title" itemprop="name">
+      Channel使用技巧
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2019/09/25/channel使用技巧/" class="archive-article-date">
+  	<time datetime="2019-09-25T12:24:45.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-25</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="巧用channel"><a href="#巧用channel" class="headerlink" title="巧用channel"></a>巧用channel</h3><h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>Go协程一般使用channel（通道）通信从而协调/同步他们的工作。合理利用Go协程和channel能帮助我们大大提高程序的性能。本文将介绍一些使用channel的场景及技巧</p>
+<a id="more"></a>
+<h4 id="场景一，使用channel返回运算结果"><a href="#场景一，使用channel返回运算结果" class="headerlink" title="场景一，使用channel返回运算结果"></a>场景一，使用channel返回运算结果</h4><p>计算斐波那契数列，在学习递归时候这是个经典问题。现在我们不用递归实现，而是用channel返回计算得出的斐波那契数列。 计算前40个斐波那契数列的值，看下效率</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"><span class="comment">//计算斐波那契数列并写到ch中</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">fibonacci</span><span class="params">(n <span class="keyword">int</span>, ch <span class="keyword">chan</span>&lt;- <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">	first, second := <span class="number">1</span>, <span class="number">1</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; n; i++ &#123;</span><br><span class="line">		ch &lt;- first</span><br><span class="line">		first, second = second, first+second</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">close</span>(ch)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ch := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">int</span>, <span class="number">40</span>)</span><br><span class="line">	i := <span class="number">0</span></span><br><span class="line">	start := time.Now()</span><br><span class="line">	<span class="keyword">go</span> fibonacci(<span class="built_in">cap</span>(ch), ch)</span><br><span class="line">	<span class="keyword">for</span> result := <span class="keyword">range</span> ch &#123;</span><br><span class="line">		fmt.Printf(<span class="string">"fibonacci(%d) is: %d\n"</span>, i, result)</span><br><span class="line">		i++</span><br><span class="line">	&#125;</span><br><span class="line">	end := time.Now()</span><br><span class="line">	delta := end.Sub(start)</span><br><span class="line">	fmt.Printf(<span class="string">"took the time: %s\n"</span>, delta)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只花了7ms，效率是递归实现的100倍（主要是算法效率问题）</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">fibonacci(<span class="number">33</span>) is: <span class="number">5702887</span></span><br><span class="line">fibonacci(<span class="number">34</span>) is: <span class="number">9227465</span></span><br><span class="line">fibonacci(<span class="number">35</span>) is: <span class="number">14930352</span></span><br><span class="line">fibonacci(<span class="number">36</span>) is: <span class="number">24157817</span></span><br><span class="line">fibonacci(<span class="number">37</span>) is: <span class="number">39088169</span></span><br><span class="line">fibonacci(<span class="number">38</span>) is: <span class="number">63245986</span></span><br><span class="line">fibonacci(<span class="number">39</span>) is: <span class="number">102334155</span></span><br><span class="line">took the time: <span class="number">8.0004</span>ms</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>使用for-range读取channel返回的结果十分便利。当channel关闭且没有数据时，for循环会自动退出，无需主动监测channel是否关闭。close(ch)只针对写数据到channel起作用，意思是close(ch)后，ch中不能再写数据，但不影响从ch中读数据</p>
+</blockquote>
+<h4 id="场景二，使用channel获取多个并行方法中的一个结果"><a href="#场景二，使用channel获取多个并行方法中的一个结果" class="headerlink" title="场景二，使用channel获取多个并行方法中的一个结果"></a>场景二，使用channel获取多个并行方法中的一个结果</h4><p>假设程序从多个复制的数据库同时读取。只需要接收首先到达的一个答案，Query 函数获取数据库的连接切片并请求。并行请求每一个数据库并返回收到的第一个响应：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">func Query(conns []conn, query string) Result &#123;</span><br><span class="line">    ch := make(chan Result, 1)</span><br><span class="line">    for _, conn := range conns &#123;</span><br><span class="line">        go func(c Conn) &#123;</span><br><span class="line">            select &#123;</span><br><span class="line">            case ch &lt;- c.DoQuery(query):</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;(conn)</span><br><span class="line">    &#125;</span><br><span class="line">    return &lt;- ch</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="场景三，响应超时处理"><a href="#场景三，响应超时处理" class="headerlink" title="场景三，响应超时处理"></a>场景三，响应超时处理</h4><p>在调用远程方法的时候，存在超时可能，超时后返回超时提示</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">func CallWithTimeOut(timeout time.Duration) (int, error) &#123;</span><br><span class="line">    select &#123;</span><br><span class="line">    case resp := &lt;-Call():</span><br><span class="line">        return resp, nil</span><br><span class="line">    case &lt;-time.After(timeout):</span><br><span class="line">        return -1, errors.New(&quot;timeout&quot;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">func Call() &lt;-chan int &#123;</span><br><span class="line">    outCh := make(chan int)</span><br><span class="line">    go func() &#123;</span><br><span class="line">        //调用远程方法</span><br><span class="line">    &#125;()</span><br><span class="line">    return outCh</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>同样可以扩展到channel的读写操作</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&gt;func ReadWithTimeOut(ch &lt;-chan int) (x int, err error) &#123;</span><br><span class="line">    select &#123;</span><br><span class="line">    case x = &lt;-ch:</span><br><span class="line">        return x, nil</span><br><span class="line">    case &lt;-time.After(time.Second):</span><br><span class="line">        return 0, errors.New(&quot;read time out&quot;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">func WriteWithTimeOut(ch chan&lt;- int, x int) (err error) &#123;</span><br><span class="line">    select &#123;</span><br><span class="line">    case ch &lt;- x:</span><br><span class="line">        return nil</span><br><span class="line">    case &lt;-time.After(time.Second):</span><br><span class="line">        return errors.New(&quot;read time out&quot;)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<h4 id="场景四，多任务并发执行和顺序执行"><a href="#场景四，多任务并发执行和顺序执行" class="headerlink" title="场景四，多任务并发执行和顺序执行"></a>场景四，多任务并发执行和顺序执行</h4><p>方法A和B同时执行，方法C等待方法A执行完后才能执行，main等待A、B、C执行完才退出</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">package main</span><br><span class="line"></span><br><span class="line">import (</span><br><span class="line">	&quot;fmt&quot;</span><br><span class="line">	&quot;time&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">func B(quit chan&lt;- string) &#123;</span><br><span class="line">	fmt.Println(&quot;B crraied out&quot;)</span><br><span class="line">	quit &lt;- &quot;B&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func A(quit chan&lt;- string, finished chan&lt;- bool) &#123;</span><br><span class="line">    // 模拟耗时任务</span><br><span class="line">	time.Sleep(time.Second * 1)</span><br><span class="line">	fmt.Println(&quot;A crraied out&quot;)</span><br><span class="line">	finished &lt;- true</span><br><span class="line">	quit &lt;- &quot;A&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func C(quit chan&lt;- string, finished &lt;-chan bool) &#123;</span><br><span class="line">    // 在A没有执行完之前，finished获取不到数据，会阻塞</span><br><span class="line">	&lt;-finished</span><br><span class="line">	fmt.Println(&quot;C crraied out&quot;)</span><br><span class="line">	quit &lt;- &quot;C&quot;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">func main() &#123;</span><br><span class="line">	finished := make(chan bool)</span><br><span class="line">	defer close(finished)</span><br><span class="line">	quit := make(chan string)</span><br><span class="line">	defer close(quit)</span><br><span class="line"></span><br><span class="line">	go A(quit, finished)</span><br><span class="line">	go B(quit)</span><br><span class="line">	go C(quit, finished)</span><br><span class="line"></span><br><span class="line">	fmt.Println(&lt;-quit)</span><br><span class="line">	fmt.Println(&lt;-quit)</span><br><span class="line">	fmt.Println(&lt;-quit)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：最后从quit中读数据不能使用for-range语法，不然程序会出现死锁</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">	for res := range quit &#123;</span><br><span class="line">		fmt.Println(res)</span><br><span class="line">	&#125;</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<blockquote>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;fatal error: all goroutines are asleep - deadlock!</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<blockquote>
+<p>原因很简单，程序中quit通道没有被close，A、B、C运行完了，Go的主协程在for循环中阻塞了，所有Go协程都阻塞了，进入了死锁状态</p>
+</blockquote>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本文介绍了几种场景下channel的使用技巧，希望能起到抛砖引玉的作用，各位如有其它技巧，欢迎评论，本文会把你们的技巧收纳在其中。感谢！！！</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pydjgif25.bkt.clouddn.com/pay/alipay.JPG">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pydjgif25.bkt.clouddn.com/pay/wechatpay.JPG">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gin</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">vue</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Channel</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/25/channel使用技巧/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2019/09/12/弄懂goroutine调度原理/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">弄懂goroutine调度原理</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#巧用channel"><span class="toc-number">1.</span> <span class="toc-text">巧用channel</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#前言"><span class="toc-number">1.1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#场景一，使用channel返回运算结果"><span class="toc-number">1.2.</span> <span class="toc-text">场景一，使用channel返回运算结果</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#场景二，使用channel获取多个并行方法中的一个结果"><span class="toc-number">1.3.</span> <span class="toc-text">场景二，使用channel获取多个并行方法中的一个结果</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#场景三，响应超时处理"><span class="toc-number">1.4.</span> <span class="toc-text">场景三，响应超时处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#场景四，多任务并发执行和顺序执行"><span class="toc-number">1.5.</span> <span class="toc-text">场景四，多任务并发执行和顺序执行</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">2.</span> <span class="toc-text">总结</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+<script src="https://billts.site/js/gitment.js"></script>
+<script>
+var gitment = new Gitment({
+  id: 'Wed Sep 25 2019 20:24:45 GMT+0800',
+  owner: 'Bingjian-Zhu',
+  repo: 'Bingjian-Zhu.github.io',
+  oauth: {
+    client_id: 'ea0e7d1f85b69731c83e',
+    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
+  
 
 
           </div>
@@ -237,9 +422,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
