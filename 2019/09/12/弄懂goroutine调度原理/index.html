@@ -9,7 +9,7 @@
   <title>弄懂goroutine调度原理 | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="goroutine简介 golang语言作者Rob Pike说，“Goroutine是一个与其他goroutines 并发运行在同一地址空间的Go函数或方法。一个运行的程序由一个或更多个goroutine组成。它与线程、协程、进程等不同。它是一个goroutine“。">
-<meta name="keywords" content="Go">
+<meta name="keywords" content="Go,goroutine">
 <meta property="og:type" content="article">
 <meta property="og:title" content="弄懂goroutine调度原理">
 <meta property="og:url" content="http://yoursite.com/2019/09/12/弄懂goroutine调度原理/index.html">
@@ -17,7 +17,7 @@
 <meta property="og:description" content="goroutine简介 golang语言作者Rob Pike说，“Goroutine是一个与其他goroutines 并发运行在同一地址空间的Go函数或方法。一个运行的程序由一个或更多个goroutine组成。它与线程、协程、进程等不同。它是一个goroutine“。">
 <meta property="og:locale" content="en">
 <meta property="og:image" content="http://pydjgif25.bkt.clouddn.com/goroutine/2019-9-12/4.png">
-<meta property="og:updated_time" content="2019-09-25T06:43:56.143Z">
+<meta property="og:updated_time" content="2019-09-27T02:57:59.934Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="弄懂goroutine调度原理">
 <meta name="twitter:description" content="goroutine简介 golang语言作者Rob Pike说，“Goroutine是一个与其他goroutines 并发运行在同一地址空间的Go函数或方法。一个运行的程序由一个或更多个goroutine组成。它与线程、协程、进程等不同。它是一个goroutine“。">
@@ -345,6 +345,10 @@
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
         		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">goroutine</a>
+        		</li>
       		
 		</ul>
 	</div>
@@ -592,15 +596,19 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Channel</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">gin</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">vue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Channel</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -679,7 +687,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
     
     	<section class="tools-section tools-section-me" q-show="aboutme">
   	  	
-  	  		<div class="aboutme-wrap" id="js-aboutme">毕业于华农&lt;br&gt;计算机科学与技术&lt;br/&gt;&lt;br&gt;现C#服务端开发一枚&lt;br/&gt;</div>
+  	  		<div class="aboutme-wrap" id="js-aboutme">毕业于华农&lt;br&gt;计算机科学与技术&lt;br/&gt;</div>
   	  	
     	</section>
     

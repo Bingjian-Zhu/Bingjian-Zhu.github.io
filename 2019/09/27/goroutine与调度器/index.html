@@ -6,15 +6,24 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: RabbitMQ | 烟花易冷的博客</title>
+  <title>goroutine与调度器 | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="烟花易冷的博客">
-<meta property="og:url" content="http://yoursite.com/tags/RabbitMQ/index.html">
+  <meta name="description" content="我们都知道Go语言是原生支持语言级并发的，这个并发的最小逻辑单元就是goroutine。">
+<meta name="keywords" content="Go,goroutine">
+<meta property="og:type" content="article">
+<meta property="og:title" content="goroutine与调度器">
+<meta property="og:url" content="http://yoursite.com/2019/09/27/goroutine与调度器/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
+<meta property="og:description" content="我们都知道Go语言是原生支持语言级并发的，这个并发的最小逻辑单元就是goroutine。">
 <meta property="og:locale" content="en">
+<meta property="og:image" content="http://pydjgif25.bkt.clouddn.com/goroutine/2019-9-27/1.jpeg">
+<meta property="og:image" content="http://pydjgif25.bkt.clouddn.com/goroutine/2019-9-27/1.jpeg">
+<meta property="og:image" content="http://pydjgif25.bkt.clouddn.com/goroutine/2019-9-27/2.jpg">
+<meta property="og:updated_time" content="2019-09-27T03:11:58.779Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="烟花易冷的博客">
+<meta name="twitter:title" content="goroutine与调度器">
+<meta name="twitter:description" content="我们都知道Go语言是原生支持语言级并发的，这个并发的最小逻辑单元就是goroutine。">
+<meta name="twitter:image" content="http://pydjgif25.bkt.clouddn.com/goroutine/2019-9-27/1.jpeg">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -152,288 +161,247 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-goroutine与调度器" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      goroutine与调度器
+    </h1>
+  
+
+        
+        <a href="/2019/09/27/goroutine与调度器/" class="archive-article-date">
+  	<time datetime="2019-09-27T02:56:55.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-27</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>我们都知道Go语言是原生支持语言级并发的，这个并发的最小逻辑单元就是goroutine。<a id="more"></a>goroutine就是Go语言提供的一种用户态线程，当然这种用户态线程是跑在内核级线程之上的。当我们创建了很多的goroutine，并且它们都是跑在同一个内核线程之上的时候，就需要一个调度器来维护这些goroutine，确保所有的goroutine都使用cpu，并且是尽可能公平的使用cpu资源。</p>
+<p>这个调度器的原理以及实现值得我们去深入研究一下。支撑整个调度器的主要有4个重要结构，分别是M、G、P、Sched，前三个定义在runtime.h中，Sched定义在proc.c中。</p>
+<p>Sched结构就是调度器，它维护有存储M和G的队列以及调度器的一些状态信息等。<br>M代表内核级线程，一个M就是一个线程，goroutine就是跑在M之上的；M是一个很大的结构，里面维护小对象内存cache（mcache）、当前执行的goroutine、随机数发生器等等非常多的信息。<br>P全称是Processor，处理器，它的主要用途就是用来执行goroutine的，所以它也维护了一个goroutine队列，里面存储了所有需要它来执行的goroutine，这个P的角色可能有一点让人迷惑，一开始容易和M冲突，后面重点聊一下它们的关系。<br>G就是goroutine实现的核心结构了，G维护了goroutine需要的栈、程序计数器以及它所在的M等信息。<br>理解M、P、G三者的关系对理解整个调度器非常重要，我从网络上找了一个图来说明其三者关系：<br><img src="http://pydjgif25.bkt.clouddn.com/goroutine/2019-9-27/1.jpeg" alt="enter image description here"></p>
+<p>地鼠(gopher)用小车运着一堆待加工的砖。M就可以看作图中的地鼠，P就是小车，G就是小车里装的砖。一图胜千言啊，弄清楚了它们三者的关系，下面我们就开始重点聊地鼠是如何在搬运砖块的。</p>
+<h5 id="启动过程"><a href="#启动过程" class="headerlink" title="启动过程"></a>启动过程</h5><p>在关心绝大多数程序的内部原理的时候，我们都试图去弄明白其启动初始化过程，弄明白这个过程对后续的深入分析至关重要。在asm_amd64.s文件中的汇编代码_rt0_amd64就是整个启动过程，核心过程如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">CALL	runtime·args(SB)</span><br><span class="line">CALL	runtime·osinit(SB)</span><br><span class="line">CALL	runtime·hashinit(SB)</span><br><span class="line">CALL	runtime·schedinit(SB)</span><br><span class="line"></span><br><span class="line">// create a new goroutine to start program</span><br><span class="line">PUSHQ	$runtime·main·f(SB)		// entry</span><br><span class="line">PUSHQ	$0			// arg size</span><br><span class="line">CALL	runtime·newproc(SB)</span><br><span class="line">POPQ	AX</span><br><span class="line">POPQ	AX</span><br><span class="line"></span><br><span class="line">// start this M</span><br><span class="line">CALL	runtime·mstart(SB)</span><br></pre></td></tr></table></figure>
+
+<p>启动过程做了调度器初始化runtime·schedinit后，调用runtime·newproc创建出第一个goroutine，这个goroutine将执行的函数是runtime·main，这第一个goroutine也就是所谓的主goroutine。我们写的最简单的Go程序”hello，world”就是完全跑在这个goroutine里，当然任何一个Go程序的入口都是从这个goroutine开始的。最后调用的runtime·mstart就是真正的执行上一步创建的主goroutine。</p>
+<p>启动过程中的调度器初始化runtime·schedinit函数主要根据用户设置的GOMAXPROCS值来创建一批小车(P)，不管GOMAXPROCS设置为多大，最多也只能创建256个小车(P)。这些小车(p)初始创建好后都是闲置状态，也就是还没开始使用，所以它们都放置在调度器结构(Sched)的pidle字段维护的链表中存储起来了，以备后续之需。</p>
+<p>查看runtime·main函数可以了解到主goroutine开始执行后，做的第一件事情是创建了一个新的内核线程(地鼠M)，不过这个线程是一个特殊线程，它在整个运行期专门负责做特定的事情——系统监控(sysmon)。接下来就是进入Go程序的main函数开始Go程序的执行。</p>
+<p>至此，Go程序就被启动起来开始运行了。一个真正干活的Go程序，一定创建有不少的goroutine，所以在Go程序开始运行后，就会向调度器添加goroutine，调度器就要负责维护好这些goroutine的正常执行。</p>
+<h5 id="创建goroutine-G"><a href="#创建goroutine-G" class="headerlink" title="创建goroutine(G)"></a>创建goroutine(G)</h5><p>在Go程序中，时常会有类似代码：</p>
+<p><code>go do_something()</code><br>go关键字就是用来创建一个goroutine的，后面的函数就是这个goroutine需要执行的代码逻辑。go关键字对应到调度器的接口就是runtime·newproc。runtime·newproc干的事情很简单，就负责制造一块砖(G)，然后将这块砖(G)放入当前这个地鼠(M)的小车(P)中。</p>
+<p>每个新的goroutine都需要有一个自己的栈，G结构的sched字段维护了栈地址以及程序计数器等信息，这是最基本的调度信息，也就是说这个goroutine放弃cpu的时候需要保存这些信息，待下次重新获得cpu的时候，需要将这些信息装载到对应的cpu寄存器中。</p>
+<p>假设这个时候已经创建了大量的goroutne，就轮到调度器去维护这些goroutine了。</p>
+<h5 id="创建内核线程-M"><a href="#创建内核线程-M" class="headerlink" title="创建内核线程(M)"></a>创建内核线程(M)</h5><p><img src="http://pydjgif25.bkt.clouddn.com/goroutine/2019-9-27/1.jpeg" alt="enter image description here"></p>
+<p>Go程序中没有语言级的关键字让你去创建一个内核线程，你只能创建goroutine，内核线程只能由runtime根据实际情况去创建。runtime什么时候创建线程？以地鼠运砖图来讲，砖(G)太多了，地鼠(M)又太少了，实在忙不过来，刚好还有空闲的小车(P)没有使用，那就从别处再借些地鼠(M)过来直到把小车(p)用完为止。这里有一个地鼠(M)不够用，从别处借地鼠(M)的过程，这个过程就是创建一个内核线程(M)。创建M的接口函数是:</p>
+<p><code>void newm(void (*fn)(void), P *p)</code><br>newm函数的核心行为就是调用clone系统调用创建一个内核线程，每个内核线程的开始执行位置都是runtime·mstart函数。参数p就是一辆空闲的小车(p)。</p>
+<p>每个创建好的内核线程都从runtime·mstart函数开始执行了，它们将用分配给自己小车去搬砖了。</p>
+<h5 id="调度核心"><a href="#调度核心" class="headerlink" title="调度核心"></a>调度核心</h5><p>newm接口只是给新创建的M分配了一个空闲的P，也就是相当于告诉借来的地鼠(M)——“接下来的日子，你将使用1号小车搬砖，记住是1号小车；待会自己到停车场拿车。”，地鼠(M)去拿小车(P)这个过程就是acquirep。runtime·mstart在进入schedule之前会给当前M装配上P，runtime·mstart函数中的代码：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span>(m != &amp;runtime·m0) &#123;</span><br><span class="line">	acquirep(m-&gt;nextp);</span><br><span class="line">	m-&gt;nextp = <span class="literal">nil</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>schedule();<br>if分支的内容就是为当前M装配上P，nextp就是newm分配的空闲小车(P)，只是到这个时候才真正拿到手罢了。没有P，M是无法执行goroutine的，就像地鼠没有小车无法运砖一样的道理。对应acquirep的动作是releasep，把M装配的P给载掉；活干完了，地鼠需要休息了，就把小车还到停车场，然后睡觉去。</p>
+<p>地鼠(M)拿到属于自己的小车(P)后，就进入工场开始干活了，也就是上面的schedule调用。简化schedule的代码如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">static void</span><br><span class="line">schedule(void)</span><br><span class="line">&#123;</span><br><span class="line">	G *gp;</span><br><span class="line">	gp = runqget(m-&gt;p);</span><br><span class="line">	<span class="keyword">if</span>(gp == <span class="literal">nil</span>)</span><br><span class="line">		gp = findrunnable();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (m-&gt;p-&gt;runqhead != m-&gt;p-&gt;runqtail &amp;&amp;</span><br><span class="line">		runtime·atomicload(&amp;runtime·sched.nmspinning) == <span class="number">0</span> &amp;&amp;</span><br><span class="line">		runtime·atomicload(&amp;runtime·sched.npidle) &gt; <span class="number">0</span>)  <span class="comment">// <span class="doctag">TODO:</span> fast atomic</span></span><br><span class="line">		wakep();</span><br><span class="line"></span><br><span class="line">	execute(gp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>schedule函数被我简化了太多，主要是我不喜欢贴大段大段的代码，因此只保留主干代码了。这里涉及到4大步逻辑：</p>
+<p><img src="http://pydjgif25.bkt.clouddn.com/goroutine/2019-9-27/2.jpg" alt="enter image description here"><br>runqget, 地鼠(M)试图从自己的小车(P)取出一块砖(G)，当然结果可能失败，也就是这个地鼠的小车已经空了，没有砖了。<br>findrunnable, 如果地鼠自己的小车中没有砖，那也不能闲着不干活是吧，所以地鼠就会试图跑去工场仓库取一块砖来处理；工场仓库也可能没砖啊，出现这种情况的时候，这个地鼠也没有偷懒停下干活，而是悄悄跑出去，随机盯上一个小伙伴(地鼠)，然后从它的车里试图偷一半砖到自己车里。如果多次尝试偷砖都失败了，那说明实在没有砖可搬了，这个时候地鼠就会把小车还回停车场，然后睡觉休息了。如果地鼠睡觉了，下面的过程当然都停止了，地鼠睡觉也就是线程sleep了。<br>wakep, 到这个过程的时候，可怜的地鼠发现自己小车里有好多砖啊，自己根本处理不过来；再回头一看停车场居然有闲置的小车，立马跑到宿舍一看，你妹，居然还有小伙伴在睡觉，直接给屁股一脚，“你妹，居然还在睡觉，老子都快累死了，赶紧起来干活，分担点工作。”，小伙伴醒了，拿上自己的小车，乖乖干活去了。有时候，可怜的地鼠跑到宿舍却发现没有在睡觉的小伙伴，于是会很失望，最后只好向工场老板说——”停车场还有闲置的车啊，我快干不动了，赶紧从别的工场借个地鼠来帮忙吧。”，最后工场老板就搞来一个新的地鼠干活了。<br>execute，地鼠拿着砖放入火种欢快的烧练起来。<br>注： “地鼠偷砖”叫work stealing，一种调度算法。</p>
+<p>到这里，貌似整个工场都正常的运转起来了，无懈可击的样子。不对，还有一个疑点没解决啊，假设地鼠的车里有很多砖，它把一块砖放入火炉中后，何时把它取出来，放入第二块砖呢？难道要一直把第一块砖烧练好，才取出来吗？那估计后面的砖真的是等得花儿都要谢了。这里就是要真正解决goroutine的调度，上下文切换问题。</p>
+<h5 id="调度点"><a href="#调度点" class="headerlink" title="调度点"></a>调度点</h5><p>当我们翻看channel的实现代码可以发现，对channel读写操作的时候会触发调用runtime·park函数。goroutine调用park后，这个goroutine就会被设置位waiting状态，放弃cpu。被park的goroutine处于waiting状态，并且这个goroutine不在小车(P)中，如果不对其调用runtime·ready，它是永远不会再被执行的。除了channel操作外，定时器中，网络poll等都有可能park goroutine。</p>
+<p>除了park可以放弃cpu外，调用runtime·gosched函数也可以让当前goroutine放弃cpu，但和park完全不同；gosched是将goroutine设置为runnable状态，然后放入到调度器全局等待队列（也就是上面提到的工场仓库，这下就明白为何工场仓库会有砖块(G)了吧）。</p>
+<p>除此之外，就轮到系统调用了，有些系统调用也会触发重新调度。Go语言完全是自己封装的系统调用，所以在封装系统调用的时候，可以做不少手脚，也就是进入系统调用的时候执行entersyscall，退出后又执行exitsyscall函数。 也只有封装了entersyscall的系统调用才有可能触发重新调度，它将改变小车(P)的状态为syscall。还记一开始提到的sysmon线程吗？这个系统监控线程会扫描所有的小车(P)，发现一个小车(P)处于了syscall的状态，就知道这个小车(P)遇到了goroutine在做系统调用，于是系统监控线程就会创建一个新的地鼠(M)去把这个处于syscall的小车给抢过来，开始干活，这样这个小车中的所有砖块(G)就可以绕过之前系统调用的等待了。被抢走小车的地鼠等系统调用返回后，发现自己的车没，不能继续干活了，于是只能把执行系统调用的goroutine放回到工场仓库，自己睡觉去了。</p>
+<p>从goroutine的调度点可以看出，调度器还是挺粗暴的，调度粒度有点过大，公平性也没有想想的那么好。总之，这个调度器还是比较简单的。</p>
+<h5 id="现场处理"><a href="#现场处理" class="headerlink" title="现场处理"></a>现场处理</h5><p>goroutine在cpu上换入换出，不断上下文切换的时候，必须要保证的事情就是保存现场和恢复现场，保存现场就是在goroutine放弃cpu的时候，将相关寄存器的值给保存到内存中；恢复现场就是在goroutine重新获得cpu的时候，需要从内存把之前的寄存器信息全部放回到相应寄存器中去。</p>
+<p>goroutine在主动放弃cpu的时候(park/gosched)，都会涉及到调用runtime·mcall函数，此函数也是汇编实现，主要将goroutine的栈地址和程序计数器保存到G结构的sched字段中，mcall就完成了现场保存。恢复现场的函数是runtime·gogocall，这个函数主要在execute中调用，就是在执行goroutine前，需要重新装载相应的寄存器。</p>
+<blockquote>
+<p><a href="http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&utm_medium=studygolang.com&utm_source=studygolang.com" target="_blank" rel="noopener">原文地址</a>  by skoo</p>
+</blockquote>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pydjgif25.bkt.clouddn.com/pay/alipay.JPG">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://pydjgif25.bkt.clouddn.com/pay/wechatpay.JPG">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ消息可靠性分析和应用/" class="archive-article-date">
-  	<time datetime="2019-09-01T15:16:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ消息可靠性分析和应用/">RabbitMQ消息可靠性分析和应用</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
         		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ教程（译）-RPC/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:06:34.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ教程（译）-RPC/">RabbitMQ教程（译）-RPC</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
+      		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">goroutine</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/27/goroutine与调度器/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ教程（译）-Topics/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:05:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2019/09/25/channel使用技巧/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Channel使用技巧</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ教程（译）-Topics/">RabbitMQ教程（译）-Topics</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#启动过程"><span class="toc-number">1.</span> <span class="toc-text">启动过程</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#创建goroutine-G"><span class="toc-number">2.</span> <span class="toc-text">创建goroutine(G)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#创建内核线程-M"><span class="toc-number">3.</span> <span class="toc-text">创建内核线程(M)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#调度核心"><span class="toc-number">4.</span> <span class="toc-text">调度核心</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#调度点"><span class="toc-number">5.</span> <span class="toc-text">调度点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#现场处理"><span class="toc-number">6.</span> <span class="toc-text">现场处理</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
         </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
+        
+    </div>
+</aside>
+
+
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ教程（译）-Routing/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:05:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        </div>
-    	 
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ教程（译）-Routing/">RabbitMQ教程（译）-Routing</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ教程（译）-Publish-Subscribe/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:04:55.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ教程（译）-Publish-Subscribe/">RabbitMQ教程（译）-Publish/Subscribe</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ教程（译）-Work-queues/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:04:34.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ教程（译）-Work-queues/">RabbitMQ教程（译）-Work queues</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ教程（译）-Hello-World/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:03:45.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        </div>
-    	 
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+<script src="https://billts.site/js/gitment.js"></script>
+<script>
+var gitment = new Gitment({
+  id: 'Fri Sep 27 2019 10:56:55 GMT+0800',
+  owner: 'Bingjian-Zhu',
+  repo: 'Bingjian-Zhu.github.io',
+  oauth: {
+    client_id: 'ea0e7d1f85b69731c83e',
+    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ教程（译）-Hello-World/">RabbitMQ教程（译）-Hello World</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
-
-    
 
 
           </div>
@@ -461,9 +429,9 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
