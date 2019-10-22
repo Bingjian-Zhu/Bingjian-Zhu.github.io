@@ -22,8 +22,8 @@
 <meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/python-one.png">
 <meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/sending.png">
 <meta property="og:image" content="http://www.rabbitmq.com/img/tutorials/receiving.png">
-<meta property="og:image" content="http://pydjgif25.bkt.clouddn.com/RabbitMQ/Hello%20World/6.png">
-<meta property="og:updated_time" content="2019-09-25T06:43:56.008Z">
+<meta property="og:image" content="http://pzr3zciou.bkt.clouddn.com/RabbitMQ/Hello%20World/6.png">
+<meta property="og:updated_time" content="2019-10-22T03:18:57.087Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RabbitMQ教程（译）-Hello World">
 <meta name="twitter:description" content="前提条件 本教程假设RabbitMQ已经安装在你本机的 (5672)端口。如果你使用了不同的主机、端口或者凭证，连接设置就需要作出一些对应的调整。">
@@ -56,7 +56,7 @@
 <div class="intrude-less">
 	<header id="header" class="inner">
 		<a href="/" class="profilepic">
-			<img src="http://pydjgif25.bkt.clouddn.com/avatar.png" class="js-avatar">
+			<img src="http://pzr3zciou.bkt.clouddn.com/avatar.png" class="js-avatar">
 		</a>
 		<hgroup>
 		  <h1 class="header-author"><a href="/">烟花易冷</a></h1>
@@ -114,7 +114,7 @@
 	<div class="intrude-less">
 		<header id="header" class="inner">
 			<div class="profilepic">
-				<img src="http://pydjgif25.bkt.clouddn.com/avatar.png" class="js-avatar">
+				<img src="http://pzr3zciou.bkt.clouddn.com/avatar.png" class="js-avatar">
 			</div>
 			<hgroup>
 			  <h1 class="header-author js-header-author">烟花易冷</h1>
@@ -223,7 +223,7 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">q, err := ch.QueueDeclare(</span><br><span class="line">  <span class="string">"hello"</span>, <span class="comment">// name</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// durable</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// delete when unused</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// exclusive</span></span><br><span class="line">  <span class="literal">false</span>,   <span class="comment">// no-wait</span></span><br><span class="line">  <span class="literal">nil</span>,     <span class="comment">// arguments</span></span><br><span class="line">)</span><br><span class="line">failOnError(err, <span class="string">"Failed to declare a queue"</span>)</span><br><span class="line"></span><br><span class="line">body := <span class="string">"Hello World!"</span></span><br><span class="line">err = ch.Publish(</span><br><span class="line">  <span class="string">""</span>,     <span class="comment">// exchange</span></span><br><span class="line">  q.Name, <span class="comment">// routing key</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// mandatory</span></span><br><span class="line">  <span class="literal">false</span>,  <span class="comment">// immediate</span></span><br><span class="line">  amqp.Publishing &#123;</span><br><span class="line">    ContentType: <span class="string">"text/plain"</span>,</span><br><span class="line">    Body:        []<span class="keyword">byte</span>(body),</span><br><span class="line">  &#125;)</span><br><span class="line">failOnError(err, <span class="string">"Failed to publish a message"</span>)</span><br></pre></td></tr></table></figure>
 
 <p>声明队列是幂等的——只有在它不存在的情况下才会创建它。消息内容是一个字节数组，因此你可以编写任何内容。<br><img src="http://www.rabbitmq.com/img/tutorials/receiving.png" alt="[|||] -&gt; (C)"></p>
-<h3 id="接收"><a href="#接收" class="headerlink" title="接收"></a>接收</h3><p>以上是消息生产者。我们的消费者需要监听来自RabbitMQ的消息，因此与生产者不同，它需要持续运行以监听消息并将其打印出来<br><img src="http://pydjgif25.bkt.clouddn.com/RabbitMQ/Hello%20World/6.png" alt><br>代码<code>receive.go</code>具有与send相同的导入包和辅助函数：</p>
+<h3 id="接收"><a href="#接收" class="headerlink" title="接收"></a>接收</h3><p>以上是消息生产者。我们的消费者需要监听来自RabbitMQ的消息，因此与生产者不同，它需要持续运行以监听消息并将其打印出来<br><img src="http://pzr3zciou.bkt.clouddn.com/RabbitMQ/Hello%20World/6.png" alt><br>代码<code>receive.go</code>具有与send相同的导入包和辅助函数：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">"log"</span></span><br><span class="line"></span><br><span class="line">  <span class="string">"github.com/streadway/amqp"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">failOnError</span><span class="params">(err error, msg <span class="keyword">string</span>)</span></span> &#123;</span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    log.Fatalf(<span class="string">"%s: %s"</span>, msg, err)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>设置与生产者相同，首先打开一个连接和一个Channel，并声明我们要消费的队列。请注意，这与发送的队列相匹配</p>
@@ -255,13 +255,13 @@
                   <div class="reward-box">
                     
                     <div class="reward-box-item">
-                      <img class="reward-img" src="http://pydjgif25.bkt.clouddn.com/pay/alipay.JPG">
+                      <img class="reward-img" src="http://pzr3zciou.bkt.clouddn.com/pay/alipay.JPG">
                       <span class="reward-type">支付宝</span>
                     </div>
                     
                     
                     <div class="reward-box-item">
-                      <img class="reward-img" src="http://pydjgif25.bkt.clouddn.com/pay/wechatpay.JPG">
+                      <img class="reward-img" src="http://pzr3zciou.bkt.clouddn.com/pay/wechatpay.JPG">
                       <span class="reward-type">微信</span>
                     </div>
                     
@@ -523,11 +523,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
+                <a href="javascript:void(0)" class="js-tag color3">Go</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Go</a>
+                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -535,7 +539,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">vue</a>
+                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -543,11 +547,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
+                <a href="javascript:void(0)" class="js-tag color4">vue</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
+                <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
               </li>
              
               <li class="article-tag-list-item">

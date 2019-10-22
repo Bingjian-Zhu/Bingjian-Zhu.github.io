@@ -16,12 +16,12 @@
 <meta property="og:site_name" content="烟花易冷的博客">
 <meta property="og:description" content="一、RabbitMQ流程简介（带Exchange）RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http://pydjgif25.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png">
-<meta property="og:updated_time" content="2019-09-25T06:43:56.008Z">
+<meta property="og:image" content="http://pzr3zciou.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png">
+<meta property="og:updated_time" content="2019-10-22T03:18:57.180Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RabbitMQ消息可靠性分析和应用">
 <meta name="twitter:description" content="一、RabbitMQ流程简介（带Exchange）RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。">
-<meta name="twitter:image" content="http://pydjgif25.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png">
+<meta name="twitter:image" content="http://pzr3zciou.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -50,7 +50,7 @@
 <div class="intrude-less">
 	<header id="header" class="inner">
 		<a href="/" class="profilepic">
-			<img src="http://pydjgif25.bkt.clouddn.com/avatar.png" class="js-avatar">
+			<img src="http://pzr3zciou.bkt.clouddn.com/avatar.png" class="js-avatar">
 		</a>
 		<hgroup>
 		  <h1 class="header-author"><a href="/">烟花易冷</a></h1>
@@ -108,7 +108,7 @@
 	<div class="intrude-less">
 		<header id="header" class="inner">
 			<div class="profilepic">
-				<img src="http://pydjgif25.bkt.clouddn.com/avatar.png" class="js-avatar">
+				<img src="http://pzr3zciou.bkt.clouddn.com/avatar.png" class="js-avatar">
 			</div>
 			<hgroup>
 			  <h1 class="header-author js-header-author">烟花易冷</h1>
@@ -181,7 +181,7 @@
       
         <h3 id="一、RabbitMQ流程简介（带Exchange）"><a href="#一、RabbitMQ流程简介（带Exchange）" class="headerlink" title="一、RabbitMQ流程简介（带Exchange）"></a>一、RabbitMQ流程简介（带Exchange）</h3><p>RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。</p>
 <a id="more"></a>
-<p>先看以下这个图：<br><img src="http://pydjgif25.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png" alt><br>P为生产者，X为中转站（Exchange），红色部分为消息队列，C1、C2为消费者。</p>
+<p>先看以下这个图：<br><img src="http://pzr3zciou.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png" alt><br>P为生产者，X为中转站（Exchange），红色部分为消息队列，C1、C2为消费者。</p>
 <p>整个流程分成三部分：第一，生产者生产消息，发送到中转站；第二，中转站按定义的规则转发消息到消息队列；第三，消费者从消息队列获取消息进行消费（处理）。</p>
 <hr>
 <h3 id="二、发布确认"><a href="#二、发布确认" class="headerlink" title="二、发布确认"></a>二、发布确认</h3><p>生产者生产消息，发送到中转站的过程中，可能会因为网络丢包、网络故障等问题造成消息丢失。为了确保生产者发送的消息不会丢失，RabbitMQ提供了发布确认（Publisher Confirms）机制，从而提高消息的可靠性（注意：发布确认机制不能和事务机制一起使用）。</p>
@@ -277,13 +277,13 @@ channel.BasicConsume(queue: &quot;Mark_Queue&quot;,
                   <div class="reward-box">
                     
                     <div class="reward-box-item">
-                      <img class="reward-img" src="http://pydjgif25.bkt.clouddn.com/pay/alipay.JPG">
+                      <img class="reward-img" src="http://pzr3zciou.bkt.clouddn.com/pay/alipay.JPG">
                       <span class="reward-type">支付宝</span>
                     </div>
                     
                     
                     <div class="reward-box-item">
-                      <img class="reward-img" src="http://pydjgif25.bkt.clouddn.com/pay/wechatpay.JPG">
+                      <img class="reward-img" src="http://pzr3zciou.bkt.clouddn.com/pay/wechatpay.JPG">
                       <span class="reward-type">微信</span>
                     </div>
                     
@@ -545,11 +545,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
+                <a href="javascript:void(0)" class="js-tag color3">Go</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Go</a>
+                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -557,7 +561,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">vue</a>
+                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -565,11 +569,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
+                <a href="javascript:void(0)" class="js-tag color4">vue</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
+                <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
               </li>
              
               <li class="article-tag-list-item">
