@@ -6,22 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>RabbitMQ消息可靠性分析和应用 | 烟花易冷的博客</title>
+  <title>Gin实现依赖注入 | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="一、RabbitMQ流程简介（带Exchange）RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。">
-<meta name="keywords" content="RabbitMQ">
+  <meta name="description" content="前言依赖注入的好处和特点这里不讲述了，本篇文章主要介绍gin框架如何实现依赖注入，将项目解耦。">
+<meta name="keywords" content="Go,gin">
 <meta property="og:type" content="article">
-<meta property="og:title" content="RabbitMQ消息可靠性分析和应用">
-<meta property="og:url" content="http://yoursite.com/2019/09/01/RabbitMQ消息可靠性分析和应用/index.html">
+<meta property="og:title" content="Gin实现依赖注入">
+<meta property="og:url" content="http://yoursite.com/2019/11/06/Gin实现依赖注入/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
-<meta property="og:description" content="一、RabbitMQ流程简介（带Exchange）RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。">
+<meta property="og:description" content="前言依赖注入的好处和特点这里不讲述了，本篇文章主要介绍gin框架如何实现依赖注入，将项目解耦。">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http://pzr3zciou.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png">
-<meta property="og:updated_time" content="2019-10-22T03:18:57.180Z">
+<meta property="og:updated_time" content="2019-11-06T06:56:47.193Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="RabbitMQ消息可靠性分析和应用">
-<meta name="twitter:description" content="一、RabbitMQ流程简介（带Exchange）RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。">
-<meta name="twitter:image" content="http://pzr3zciou.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png">
+<meta name="twitter:title" content="Gin实现依赖注入">
+<meta name="twitter:description" content="前言依赖注入的好处和特点这里不讲述了，本篇文章主要介绍gin框架如何实现依赖注入，将项目解耦。">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -159,108 +157,72 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-RabbitMQ消息可靠性分析和应用" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-Gin实现依赖注入" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      RabbitMQ消息可靠性分析和应用
+      Gin实现依赖注入
     </h1>
   
 
         
-        <a href="/2019/09/01/RabbitMQ消息可靠性分析和应用/" class="archive-article-date">
-  	<time datetime="2019-09-01T15:16:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
+        <a href="/2019/11/06/Gin实现依赖注入/" class="archive-article-date">
+  	<time datetime="2019-11-06T06:55:19.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-06</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="一、RabbitMQ流程简介（带Exchange）"><a href="#一、RabbitMQ流程简介（带Exchange）" class="headerlink" title="一、RabbitMQ流程简介（带Exchange）"></a>一、RabbitMQ流程简介（带Exchange）</h3><p>RabbitMQ使用一些机制来保证可靠性，如持久化、消费确认及发布确认等。</p>
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>依赖注入的好处和特点这里不讲述了，本篇文章主要介绍gin框架如何实现依赖注入，将项目解耦。</p>
 <a id="more"></a>
-<p>先看以下这个图：<br><img src="http://pzr3zciou.bkt.clouddn.com/RabbitMQ/2019-9-1/1.png" alt><br>P为生产者，X为中转站（Exchange），红色部分为消息队列，C1、C2为消费者。</p>
-<p>整个流程分成三部分：第一，生产者生产消息，发送到中转站；第二，中转站按定义的规则转发消息到消息队列；第三，消费者从消息队列获取消息进行消费（处理）。</p>
-<hr>
-<h3 id="二、发布确认"><a href="#二、发布确认" class="headerlink" title="二、发布确认"></a>二、发布确认</h3><p>生产者生产消息，发送到中转站的过程中，可能会因为网络丢包、网络故障等问题造成消息丢失。为了确保生产者发送的消息不会丢失，RabbitMQ提供了发布确认（Publisher Confirms）机制，从而提高消息的可靠性（注意：发布确认机制不能和事务机制一起使用）。</p>
-<p><strong>单条消息发布确认：</strong></p>
-<pre><code>channel.ConfirmSelect();//发布确认机制
-string message = &quot;msg&quot;;
-var body = Encoding.UTF8.GetBytes(message);
-channel.BasicPublish(
-        exchange: &quot;MarkTopicChange&quot;,
-        routingKey: &quot;MarkRouteKey.one&quot;,
-        basicProperties: null,
-        body: body
-        );
-bool isPublished = channel.WaitForConfirms();//通道（channel）里消息发送成功返回true</code></pre><p>使用channel.ConfirmSelect，一旦信道进入确认模式，所有在该信道上面发布的消息都会被指派一个唯一的ID（从1开始）。消息被投递到所有匹配的队列之后，RabbitMQ就会发送（Basic.Ack）给生产者（包含消息的唯一ID），生产者从而知道消息发送成功。</p>
-<p><strong>多条消息发布确认：</strong></p>
-<pre><code>channel.ConfirmSelect();//发布确认机制
- foreach (var itemMsg in lstMsg)
- {
-     byte[] sendBytes = Encoding.UTF8.GetBytes(itemMsg);
-     //发布消息
-     channel.BasicPublish(
-         exchange: &quot;MarkTopicChange&quot;,
-         routingKey: &quot;MarkRouteKey.one&quot;,
-         basicProperties: null,
-         body: sendBytes
-         );
- }
- bool isAllPublished = channel.WaitForConfirms();//通道（channel）里所有消息均发送才返回true</code></pre><p>注意：多消息发布确认机制情况下，倘若要发送100条消息，发送90条后，突然网络故障，后面的消息发送失败了，那么isAllPublished返回的是false，而前面90条消息已经发送到消息队列了。我们还不知道哪些消息是发送失败的，所以很多条消息发布确认，建议分几次发送或多通道发送。</p>
-<p>此外，需要确保在中转站（Exchange）的消息可以顺利到达消息队列。<br>（1）首先需要定义匹配的Exchange和Queue，根据Exchange的类型和routingKey确定转发的关系。<br>（2）确保消息队列有足够内存存储消息。</p>
-<blockquote>
-<p> RabbitMQ默认配置<code>vm_memory_high_watermark</code>为0.4。意思是控制消息占40%内存左右。<code>vm_memory_high_watermark_paging_ratio</code>为0.5，当消息占用内存超过50%，RabbitMQ会把消息转移到磁盘上以释放内存。当磁盘剩余空间小于阀值disk_free_limit（默认为50M），所有生产者阻塞，避免充满磁盘，导致所有的写操作失败。</p>
-</blockquote>
-<blockquote>
-<p>RabbitMQ配置文件一般在<code>%APPDATA%\RabbitMQ\rabbitmq.config</code><br>%APPDATA% 一般为 <code>C:\Users\%USERNAME%\AppData\Roaming</code>（Windows环境）</p>
-</blockquote>
-<hr>
-<h3 id="三、持久化"><a href="#三、持久化" class="headerlink" title="三、持久化"></a>三、持久化</h3><p> 消息存放到消息队列后，在不配置消息持久化的情况下，若服务器重启、关闭或宕机等，消息都会丢失。配置持久化可以有效提高消息的可靠性。持久化需要同时配置消息持久化和队列持久化。单配置消息持久化，队列消失了，消息没有地方存放；单配置队列持久化，队列还在，消息没了。</p>
-<p>队列持久化在定义队列时候配置</p>
-<pre><code>//定义队列
-channel.QueueDeclare(
-    queue: &quot;Mark_Queue&quot;, //队列名称
-    durable: true, //队列磁盘持久化                   
-    exclusive: false,//是否排他的，false。如果一个队列声明为排他队列，该队列首次声明它的连接可见，并在连接断开时自动删除
-    autoDelete: false,//是否自动删除，一般设成false
-    arguments: null
-    );</code></pre><p>消息持久化在发布消息时候配置</p>
-<pre><code>//消息持久化，把DeliveryMode设成2
-IBasicProperties properties = channel.CreateBasicProperties();
-properties.DeliveryMode = 2;
-    //发布消息
-    channel.BasicPublish(
-        exchange: &quot;MarkTopicChange&quot;,
-        routingKey: &quot;MarkRouteKey.one&quot;,
-        basicProperties: properties,
-        body: sendBytes
-        );</code></pre><p> 如何配置了事务机制或发布确认（publisher confirm）机制，服务端的返回Basic.Ack是在消息落盘之后执行的，进一步的提高了消息的可靠性。<br>为了防止磁盘损坏带来的消息丢失，可以配置镜像队列，这里不作介绍。</p>
-<hr>
-<h3 id="四、消费确认"><a href="#四、消费确认" class="headerlink" title="四、消费确认"></a>四、消费确认</h3><p> 为了确保消息被消费者消费，RabbitMQ提供消费确认模式（consumer Acknowledgements）。自动确认模式，当消费者成功接收到消息后，自动通知RabbitMQ，把消息队列中相应消息删除。这很大程度上满足不了我们，假如消费者接收到消息后，服务器宕机，消息还没处理完成，这样就会造成消息丢失。手动确认模式，当消费者成功处理完消息后，手动发消息通知RabbitMQ，把消息队列中相应消息删除。</p>
-<pre><code>consumer.Received += (model, ea) =&gt;
-{
-    var body = ea.Body;
-    var message = Encoding.UTF8.GetString(body);
-    var routingKey = ea.RoutingKey;
-    Console.WriteLine(&quot; [x] Received &apos;{0}&apos;:&apos;{1}&apos;&quot;,
-                      routingKey,
-                      message);
+<h3 id="项目结构"><a href="#项目结构" class="headerlink" title="项目结构"></a>项目结构</h3><pre><code>
+├── cmd          程序入口
+├── common   通用模块代码
+├── config       配置文件
+├── controller API控制器
+├── docs         数据库文件
+├── models     数据表实体
+├── page        页面数据返回实体
+├── repository 数据访问层
+├── router       路由
+├── service     业务逻辑层
+├── vue-admin Vue前端页面代码
+</code></pre>
+<p>相信很多Java或者.NET的码友对这个项目结构还是比较熟悉的，现在我们就用这个项目结构在gin框架中实现依赖注入。这里主要介绍controller、service和repository。</p>
+<h3 id="数据访问层repository"><a href="#数据访问层repository" class="headerlink" title="数据访问层repository"></a>数据访问层repository</h3><ol>
+<li><p>首先定义IStartRepo接口，里面包括Speak方法</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//IStartRepo 定义IStartRepo接口</span></span><br><span class="line"><span class="keyword">type</span> IStartRepo <span class="keyword">interface</span> &#123;</span><br><span class="line">	Speak(message <span class="keyword">string</span>) <span class="keyword">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>实现该接口，这里就不访问数据库了，直接返回数据</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//StartRepo 注入数据库</span></span><br><span class="line"><span class="keyword">type</span> StartRepo <span class="keyword">struct</span> &#123;</span><br><span class="line">	Source datasource.IDb <span class="string">`inject:""`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Speak 实现Speak方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *StartRepo)</span> <span class="title">Speak</span><span class="params">(message <span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="comment">//使用注入的IDb访问数据库</span></span><br><span class="line">	<span class="comment">//s.Source.DB().Where("name = ?", "jinzhu").First(&amp;user)</span></span><br><span class="line">	<span class="keyword">return</span> fmt.Sprintf(<span class="string">"[Repository] speak: %s"</span>, message)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-//确认该消息已被消费,发删除消息给RabbitMQ，把消息队列中的消息删除 
-channel.BasicAck(ea.DeliveryTag, false);
-//消费消息失败，拒绝此消息，重回队列，让它可以继续发送到其他消费者 
-//channel.BasicReject(ea.DeliveryTag, true);
-//消费消息失败，拒绝多条消息，重回队列，让它们可以继续发送到其他消费者 
-//channel.BasicNack(ea.DeliveryTag, true, true);
-};
-//手动确认消息，把autoAck设成false
-channel.BasicConsume(queue: &quot;Mark_Queue&quot;,
-                     autoAck: false,
-                     consumer: consumer);</code></pre><p>这里值得注意的是，消息处理完成后，一定要把处理完成的消息发送到RabbitMQ<code>channel.BasicAck(ea.DeliveryTag, false)</code>，不然RabbitMQ会一直等待，从而造成内存泄露。若处理消息过程中发生异常，可以使用<code>channel.BasicReject(ea.DeliveryTag, true)</code>来拒绝此消息，让它重回队列。若RabbitMQ收不到消费者任何确认消息的信号（包括确认信号，拒绝信号灯），直到此消费者断开连接，消息才能重回队列，继续发送到其他消费者。<br>提醒一下，假如消费者消费消息的方法不支持并发（取决于需求），可以限制消费者每次只接收一条消息。</p>
-<pre><code>channel.BasicQos(0, 1, false);</code></pre>
+</li>
+</ol>
+<p>这样我们就简单完成了数据库访问层的接口封装</p>
+<h3 id="业务逻辑层service"><a href="#业务逻辑层service" class="headerlink" title="业务逻辑层service"></a>业务逻辑层service</h3><ol>
+<li><p>定义IStartService接口</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//IStartService 定义IStartService接口</span></span><br><span class="line"><span class="keyword">type</span> IStartService <span class="keyword">interface</span> &#123;</span><br><span class="line">	Say(message <span class="keyword">string</span>) <span class="keyword">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>实现IStartService接口方法，注入IStartRepo数据访问层</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//StartService 注入IStartRepo</span></span><br><span class="line"><span class="keyword">type</span> StartService <span class="keyword">struct</span> &#123;</span><br><span class="line">	Repo repository.IStartRepo <span class="string">`inject:""`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//Say 实现Say方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *StartService)</span> <span class="title">Say</span><span class="params">(message <span class="keyword">string</span>)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> s.Repo.Speak(message)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h3 id="控制器controller"><a href="#控制器controller" class="headerlink" title="控制器controller"></a>控制器controller</h3><ol>
+<li>注入IStartService业务逻辑层，并调用Say方法<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Index 注入IStartService</span></span><br><span class="line"><span class="keyword">type</span> Index <span class="keyword">struct</span> &#123;</span><br><span class="line">	Service service.IStartService <span class="string">`inject:""`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//GetName 调用IStartService的Say方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(i *Index)</span> <span class="title">GetName</span><span class="params">(ctx *gin.Context)</span></span> &#123;</span><br><span class="line">	<span class="keyword">var</span> message = ctx.Param(<span class="string">"msg"</span>)</span><br><span class="line">	ctx.JSON(<span class="number">200</span>, i.Service.Say(message))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h3 id="注入gin中"><a href="#注入gin中" class="headerlink" title="注入gin中"></a>注入gin中</h3><p>到此三个层此代码已写好，然后我们使用<code>&quot;github.com/facebookgo/inject&quot;</code>Facebook的工具包将它们注入到gin中。</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Configure</span><span class="params">(app *gin.Engine)</span></span> &#123;</span><br><span class="line">	<span class="comment">//controller declare</span></span><br><span class="line">	<span class="keyword">var</span> index controller.Index</span><br><span class="line">	<span class="comment">//inject declare</span></span><br><span class="line">	db := datasource.Db&#123;&#125;</span><br><span class="line">	<span class="comment">//Injection</span></span><br><span class="line">	<span class="keyword">var</span> injector inject.Graph</span><br><span class="line">	err := injector.Provide(</span><br><span class="line">		&amp;inject.Object&#123;Value: &amp;index&#125;,</span><br><span class="line">		&amp;inject.Object&#123;Value: &amp;db&#125;,</span><br><span class="line">		&amp;inject.Object&#123;Value: &amp;repository.StartRepo&#123;&#125;&#125;,</span><br><span class="line">		&amp;inject.Object&#123;Value: &amp;service.StartService&#123;&#125;&#125;,</span><br><span class="line">	)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(<span class="string">"inject fatal: "</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> err := injector.Populate(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(<span class="string">"inject fatal: "</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//database connect</span></span><br><span class="line">	err = db.Connect()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatal(<span class="string">"db fatal:"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	v1 := app.Group(<span class="string">"/"</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		v1.GET(<span class="string">"/get/:msg"</span>, index.GetName)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有关更多的github.com/facebookgo/inject使用方法请参考<a href="https://godoc.org/github.com/facebookgo/inject" target="_blank" rel="noopener">文档</a></p>
+<p>本demo源码地址:<a href="https://github.com/Bingjian-Zhu/gin-inject" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/gin-inject</a></p>
+
       
 
       
@@ -304,7 +266,11 @@ channel.BasicConsume(queue: &quot;Mark_Queue&quot;,
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gin</a>
         		</li>
       		
 		</ul>
@@ -360,7 +326,7 @@ channel.BasicConsume(queue: &quot;Mark_Queue&quot;,
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/01/RabbitMQ消息可靠性分析和应用/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/11/06/Gin实现依赖注入/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -374,18 +340,9 @@ channel.BasicConsume(queue: &quot;Mark_Queue&quot;,
   
 <nav id="article-nav">
   
-    <a href="/2019/09/03/gin-jwt对API进行权限控制/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          gin-jwt对API进行权限控制
-        
-      </div>
-    </a>
   
-  
-    <a href="/2019/09/01/RabbitMQ教程（译）-RPC/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">RabbitMQ教程（译）-RPC</div>
+    <a href="/2019/10/22/Go-Modules使用教程（3分钟学会）/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Go Modules使用教程（3分钟学会）</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -412,7 +369,7 @@ channel.BasicConsume(queue: &quot;Mark_Queue&quot;,
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一、RabbitMQ流程简介（带Exchange）"><span class="toc-number">1.</span> <span class="toc-text">一、RabbitMQ流程简介（带Exchange）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二、发布确认"><span class="toc-number">2.</span> <span class="toc-text">二、发布确认</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三、持久化"><span class="toc-number">3.</span> <span class="toc-text">三、持久化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四、消费确认"><span class="toc-number">4.</span> <span class="toc-text">四、消费确认</span></a></li></ol>
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#项目结构"><span class="toc-number">2.</span> <span class="toc-text">项目结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据访问层repository"><span class="toc-number">3.</span> <span class="toc-text">数据访问层repository</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#业务逻辑层service"><span class="toc-number">4.</span> <span class="toc-text">业务逻辑层service</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#控制器controller"><span class="toc-number">5.</span> <span class="toc-text">控制器controller</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#注入gin中"><span class="toc-number">6.</span> <span class="toc-text">注入gin中</span></a></li></ol>
                     </div>
                 </span>
             </div>
@@ -437,7 +394,7 @@ channel.BasicConsume(queue: &quot;Mark_Queue&quot;,
 <script src="https://billts.site/js/gitment.js"></script>
 <script>
 var gitment = new Gitment({
-  id: 'Sun Sep 01 2019 23:16:03 GMT+0800',
+  id: 'Wed Nov 06 2019 14:55:19 GMT+0800',
   owner: 'Bingjian-Zhu',
   repo: 'Bingjian-Zhu.github.io',
   oauth: {
