@@ -6,19 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Go-gRPC教程-简单RPC（二） | 烟花易冷的博客</title>
+  <title>Go gRPC教程-简单RPC（二） | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="前言gRPC主要有4种请求和响应模式，分别是简单模式(Simple RPC)、服务端流式（Server-side streaming RPC）、客户端流式（Client-side streaming RPC）、和双向流式（Bidirectional streaming RPC）。  简单模式(Simple RPC)：客户端发起请求并等待服务端响应。  服务端流式（Server-side strea">
 <meta name="keywords" content="Go,Go gRPC">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Go-gRPC教程-简单RPC（二）">
+<meta property="og:title" content="Go gRPC教程-简单RPC（二）">
 <meta property="og:url" content="http://yoursite.com/2020/04/10/Go-gRPC教程-简单RPC（二）/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
 <meta property="og:description" content="前言gRPC主要有4种请求和响应模式，分别是简单模式(Simple RPC)、服务端流式（Server-side streaming RPC）、客户端流式（Client-side streaming RPC）、和双向流式（Bidirectional streaming RPC）。  简单模式(Simple RPC)：客户端发起请求并等待服务端响应。  服务端流式（Server-side strea">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2020-04-10T08:34:29.766Z">
+<meta property="og:updated_time" content="2020-04-10T11:15:28.217Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Go-gRPC教程-简单RPC（二）">
+<meta name="twitter:title" content="Go gRPC教程-简单RPC（二）">
 <meta name="twitter:description" content="前言gRPC主要有4种请求和响应模式，分别是简单模式(Simple RPC)、服务端流式（Server-side streaming RPC）、客户端流式（Client-side streaming RPC）、和双向流式（Bidirectional streaming RPC）。  简单模式(Simple RPC)：客户端发起请求并等待服务端响应。  服务端流式（Server-side strea">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
@@ -164,7 +164,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      Go-gRPC教程-简单RPC（二）
+      Go gRPC教程-简单RPC（二）
     </h1>
   
 
@@ -198,7 +198,7 @@
 <figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">SimpleResponse</span></span>&#123;</span><br><span class="line">    <span class="comment">// 定义接收的参数</span></span><br><span class="line">    <span class="comment">// 参数类型 参数名 标识号(不可重复)</span></span><br><span class="line">    <span class="built_in">int32</span> code = <span class="number">1</span>;  <span class="comment">//状态码</span></span><br><span class="line">    <span class="built_in">string</span> value = <span class="number">2</span>;<span class="comment">//接收值</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>3.定义服务方法Route</p>
-<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义我们的服务（可定义多个服务,每个服务可定义多个接口）</span></span><br><span class="line"><span class="class"><span class="keyword">service</span> <span class="title">Simple</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> Route (SimpleRequest) <span class="keyword">returns</span> (SimpleResponse)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义我们的服务（可定义多个服务,每个服务可定义多个接口）</span></span><br><span class="line"><span class="class"><span class="keyword">service</span> <span class="title">Simple</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> Route (SimpleRequest) <span class="keyword">returns</span> (SimpleResponse)&#123;&#125;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>4.编译proto文件</p>
 <p>我这里使用上一篇介绍的VSCode-proto3插件，保存后自动编译。</p>
@@ -341,9 +341,18 @@
   
 <nav id="article-nav">
   
+    <a href="/2020/04/13/Go-gRPC教程-服务端流式RPC（三）/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          Go gRPC教程-服务端流式RPC（三）
+        
+      </div>
+    </a>
   
-    <a href="/2020/04/09/GO-gRPC教程-环境安装（一）/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">GO gRPC教程-环境安装（一）</div>
+  
+    <a href="/2020/04/09/Go-gRPC教程-环境安装（一）/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Go gRPC教程-环境安装（一）</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -502,11 +511,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
+                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
+                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -526,11 +535,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
+                <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
+                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
               </li>
             
             <div class="clearfix"></div>
