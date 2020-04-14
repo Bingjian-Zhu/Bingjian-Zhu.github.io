@@ -17,7 +17,7 @@
 <meta property="og:description" content="前言上一篇介绍了简单模式RPC，当数据量大或者需要不断传输数据时候，我们应该使用流式RPC，它允许我们边处理边传输数据。本篇先介绍服务端流式RPC。 服务端流式RPC：客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流，直到里面没有任何消息。">
 <meta property="og:locale" content="en">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202004/1508611-20200413200011972-285642192.png">
-<meta property="og:updated_time" content="2020-04-13T12:35:59.929Z">
+<meta property="og:updated_time" content="2020-04-14T03:14:55.837Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Go gRPC教程-服务端流式RPC（三）">
 <meta name="twitter:description" content="前言上一篇介绍了简单模式RPC，当数据量大或者需要不断传输数据时候，我们应该使用流式RPC，它允许我们边处理边传输数据。本篇先介绍服务端流式RPC。 服务端流式RPC：客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流，直到里面没有任何消息。">
@@ -191,13 +191,13 @@
 <p>2.定义接收信息</p>
 <figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义流式响应信息</span></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">StreamResponse</span></span>&#123;</span><br><span class="line">    <span class="comment">// 流式响应数据</span></span><br><span class="line">    <span class="built_in">string</span> stream_value = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>3.定义服务方式ListValue</p>
+<p>3.定义服务方法ListValue</p>
 <p>服务端流式rpc，只要在响应数据前添加stream即可</p>
 <figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义我们的服务（可定义多个服务,每个服务可定义多个接口）</span></span><br><span class="line"><span class="class"><span class="keyword">service</span> <span class="title">StreamServer</span></span>&#123;</span><br><span class="line">    <span class="comment">// 服务端流式rpc，在响应数据前添加stream</span></span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> ListValue(SimpleRequest)<span class="keyword">returns</span>(stream StreamResponse)&#123;&#125;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>4.编译proto文件</p>
 <p>进入server_stream.proto所在目录，运行指令:</p>
-<p><code>protoc --go_out=plugins=grpc:./ ./simple.proto</code></p>
+<p><code>protoc --go_out=plugins=grpc:./ ./server_stream.proto</code></p>
 <h3 id="创建Server端"><a href="#创建Server端" class="headerlink" title="创建Server端"></a>创建Server端</h3><p>1.定义我们的服务，并实现ListValue方法</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SimpleService 定义我们的服务</span></span><br><span class="line"><span class="keyword">type</span> StreamService <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"><span class="comment">// ListValue 实现ListValue方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *StreamService)</span> <span class="title">ListValue</span><span class="params">(req *pb.SimpleRequest, srv pb.StreamServer_ListValueServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> n := <span class="number">0</span>; n &lt; <span class="number">5</span>; n++ &#123;</span><br><span class="line">		<span class="comment">// 向流中发送消息， 默认每次send送消息最大长度为`math.MaxInt32`bytes</span></span><br><span class="line">		err := srv.Send(&amp;pb.StreamResponse&#123;</span><br><span class="line">			StreamValue: req.Data + strconv.Itoa(n),</span><br><span class="line">		&#125;)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -229,7 +229,7 @@
 
 <p>只需要调用<code>CloseSend()</code>方法，就可以关闭服务端的stream，让它停止发送数据。值得注意的是，调用<code>CloseSend()</code>后，若继续调用<code>Recv()</code>，会重新激活stream，接着当前的结果继续获取消息。</p>
 <p>这能完美解决客户端<code>暂停</code>-&gt;<code>继续</code>获取数据的操作。</p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本篇介绍了<code>服务端流式RPC</code>的简单实用，客户端发起一个请求，服务端不停返回数据，直到服务端停止发送数据或客户端主动停止接收数据为止。下篇将介绍<code>客户端流式RPC</code>。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本篇介绍了<code>服务端流式RPC</code>的简单使用，客户端发起一个请求，服务端不停返回数据，直到服务端停止发送数据或客户端主动停止接收数据为止。下篇将介绍<code>客户端流式RPC</code>。</p>
 <p>教程源码地址：<a href="https://github.com/Bingjian-Zhu/go-grpc-example" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/go-grpc-example</a><br>参考：<a href="http://doc.oschina.net/grpc?t=60133" target="_blank" rel="noopener">gRPC官方文档中文版</a></p>
 
       
@@ -348,6 +348,15 @@
 
   
 <nav id="article-nav">
+  
+    <a href="/2020/04/14/Go-gRPC教程-客户端流式RPC（四）/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          Go gRPC教程-客户端流式RPC（四）
+        
+      </div>
+    </a>
   
   
     <a href="/2020/04/10/Go-gRPC教程-简单RPC（二）/" id="article-nav-older" class="article-nav-link-wrap">
@@ -502,7 +511,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
+                <a href="javascript:void(0)" class="js-tag color3">Go gRPC</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -510,11 +519,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Go gRPC</a>
+                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">docker</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -526,15 +539,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">docker</a>
+                <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">.NET Core</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
               </li>
              
               <li class="article-tag-list-item">

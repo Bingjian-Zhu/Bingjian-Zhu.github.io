@@ -6,22 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Go Modules使用教程（3分钟学会） | 烟花易冷的博客</title>
+  <title>Go gRPC教程-客户端流式RPC（四） | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前言随着Go 1.13发布，GOPROXY默认值proxy.golang.org在中国大陆不能被访问。">
-<meta name="keywords" content="Go,Go Modules">
+  <meta name="description" content="前言上一篇介绍了服务端流式RPC，客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流的数据。本篇将介绍客户端流式RPC。 客户端流式RPC：与服务端流式RPC相反，客户端不断的向服务端发送数据流，而在发送结束后，由服务端返回一个响应。">
+<meta name="keywords" content="Go,Go gRPC">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Go Modules使用教程（3分钟学会）">
-<meta property="og:url" content="http://yoursite.com/2019/10/22/Go-Modules使用教程（3分钟学会）/index.html">
+<meta property="og:title" content="Go gRPC教程-客户端流式RPC（四）">
+<meta property="og:url" content="http://yoursite.com/2020/04/14/Go-gRPC教程-客户端流式RPC（四）/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
-<meta property="og:description" content="前言随着Go 1.13发布，GOPROXY默认值proxy.golang.org在中国大陆不能被访问。">
+<meta property="og:description" content="前言上一篇介绍了服务端流式RPC，客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流的数据。本篇将介绍客户端流式RPC。 客户端流式RPC：与服务端流式RPC相反，客户端不断的向服务端发送数据流，而在发送结束后，由服务端返回一个响应。">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="https://img2018.cnblogs.com/blog/1508611/201910/1508611-20191022110934890-1087445181.png">
-<meta property="og:updated_time" content="2019-10-22T03:15:31.959Z">
+<meta property="og:updated_time" content="2020-04-14T03:22:27.021Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Go Modules使用教程（3分钟学会）">
-<meta name="twitter:description" content="前言随着Go 1.13发布，GOPROXY默认值proxy.golang.org在中国大陆不能被访问。">
-<meta name="twitter:image" content="https://img2018.cnblogs.com/blog/1508611/201910/1508611-20191022110934890-1087445181.png">
+<meta name="twitter:title" content="Go gRPC教程-客户端流式RPC（四）">
+<meta name="twitter:description" content="前言上一篇介绍了服务端流式RPC，客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流的数据。本篇将介绍客户端流式RPC。 客户端流式RPC：与服务端流式RPC相反，客户端不断的向服务端发送数据流，而在发送结束后，由服务端返回一个响应。">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -159,43 +157,75 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Go-Modules使用教程（3分钟学会）" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-Go-gRPC教程-客户端流式RPC（四）" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      Go Modules使用教程（3分钟学会）
+      Go gRPC教程-客户端流式RPC（四）
     </h1>
   
 
         
-        <a href="/2019/10/22/Go-Modules使用教程（3分钟学会）/" class="archive-article-date">
-  	<time datetime="2019-10-22T03:13:56.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-22</time>
+        <a href="/2020/04/14/Go-gRPC教程-客户端流式RPC（四）/" class="archive-article-date">
+  	<time datetime="2020-04-14T03:21:48.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-14</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>随着Go 1.13发布，GOPROXY默认值<code>proxy.golang.org</code>在中国大陆不能被访问。</p>
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>上一篇介绍了<code>服务端流式RPC</code>，客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流的数据。本篇将介绍<code>客户端流式RPC</code>。</p>
+<p><code>客户端流式RPC</code>：与<code>服务端流式RPC</code>相反，客户端不断的向服务端发送数据流，而在发送结束后，由服务端返回一个响应。</p>
 <a id="more"></a>
-<p>七牛云顺势推出<code>goproxy.cn</code>，以利于中国开发者更好使用Go Modules，它是非盈利性的项目，首先感谢七牛云。</p>
-<h3 id="使用教程"><a href="#使用教程" class="headerlink" title="使用教程"></a>使用教程</h3><p>（1）升级到Go1.13<br>（2）运行<code>go env -w GO111MODULE=on</code><br>（3）运行<code>go env -w GOPROXY=https://goproxy.cn,direct</code><br>可以通过运行<code>go env</code>查看（2）、（3）步骤是否设置成功<br><img src="https://img2018.cnblogs.com/blog/1508611/201910/1508611-20191022110934890-1087445181.png" alt></p>
-<p>（4）在项目跟目录下执行<code>go mod init &lt;OPTIONAL_MODULE_PATH&gt;</code><br>执行成功后生成go.mod文件</p>
-<blockquote>
-<p><strong>其他指令</strong></p>
-<ul>
-<li><code>go get -u</code> //更新现有的依赖</li>
-<li><code>go mod tidy</code> //整理模块（拉取缺少的模块，移除不用的模块）</li>
-<li><code>go mod download</code>//下载依赖包</li>
-<li><code>go mod graph</code> //打印现有依赖结构</li>
-<li><code>go mod vendor</code> //将依赖复制到vendor下</li>
-<li><code>go mod verify</code> //校验依赖</li>
-</ul>
-</blockquote>
-<h3 id="go-mod文件解析"><a href="#go-mod文件解析" class="headerlink" title="go.mod文件解析"></a>go.mod文件解析</h3><p><code>module</code>：模块名称，使用指令<code>go mod init &lt;OPTIONAL_MODULE_PATH&gt;</code>可设置<br><code>require</code>：依赖包列表以及版本<br><code>exclude</code>：禁用依赖包列表<br><code>replace</code>：替换依赖包列表<br><code>go</code>：go版本号</p>
+<h6 id="情景模拟：客户端大量数据上传到服务端。"><a href="#情景模拟：客户端大量数据上传到服务端。" class="headerlink" title="情景模拟：客户端大量数据上传到服务端。"></a>情景模拟：客户端大量数据上传到服务端。</h6><h3 id="新建proto文件"><a href="#新建proto文件" class="headerlink" title="新建proto文件"></a>新建proto文件</h3><p>新建client_stream.proto文件</p>
+<p>1.定义发送信息</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义流式请求信息</span></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">StreamRequest</span></span>&#123;</span><br><span class="line">    <span class="comment">//流式请求参数</span></span><br><span class="line">    <span class="built_in">string</span> stream_data = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2.定义接收信息</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义响应信息</span></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">SimpleResponse</span></span>&#123;</span><br><span class="line">    <span class="comment">//响应码</span></span><br><span class="line">    <span class="built_in">int32</span> code = <span class="number">1</span>;</span><br><span class="line">    <span class="comment">//响应值</span></span><br><span class="line">    <span class="built_in">string</span> value = <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>3.定义服务方法RouteList</p>
+<p>客户端流式rpc，只要在请求的参数前添加stream即可</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">service</span> <span class="title">StreamClient</span></span>&#123;</span><br><span class="line">    <span class="comment">// 客户端流式rpc，在请求的参数前添加stream</span></span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> RouteList (stream StreamRequest) <span class="keyword">returns</span> (SimpleResponse)&#123;&#125;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>4.编译proto文件</p>
+<p>进入client_stream.proto所在目录，运行指令:</p>
+<p><code>protoc --go_out=plugins=grpc:./ ./client_stream.proto</code></p>
+<h3 id="创建Server端"><a href="#创建Server端" class="headerlink" title="创建Server端"></a>创建Server端</h3><p>1.定义我们的服务，并实现RouteList方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SimpleService 定义我们的服务</span></span><br><span class="line"><span class="keyword">type</span> SimpleService <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"><span class="comment">// RouteList 实现RouteList方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *SimpleService)</span> <span class="title">RouteList</span><span class="params">(srv pb.StreamClient_RouteListServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="comment">//从流中获取消息</span></span><br><span class="line">		res, err := srv.Recv()</span><br><span class="line">		<span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">			<span class="comment">//发送结果，并关闭</span></span><br><span class="line">			<span class="keyword">return</span> srv.SendAndClose(&amp;pb.SimpleResponse&#123;Value: <span class="string">"ok"</span>&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		log.Println(res.StreamData)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2.启动gRPC服务器</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	<span class="comment">// Address 监听地址</span></span><br><span class="line">	Address <span class="keyword">string</span> = <span class="string">":8000"</span></span><br><span class="line">	<span class="comment">// Network 网络通信协议</span></span><br><span class="line">	Network <span class="keyword">string</span> = <span class="string">"tcp"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 监听本地端口</span></span><br><span class="line">	listener, err := net.Listen(Network, Address)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"net.Listen err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	log.Println(Address + <span class="string">" net.Listing..."</span>)</span><br><span class="line">	<span class="comment">// 新建gRPC服务器实例</span></span><br><span class="line">	grpcServer := grpc.NewServer()</span><br><span class="line">	<span class="comment">// 在gRPC服务器注册我们的服务</span></span><br><span class="line">	pb.RegisterStreamClientServer(grpcServer, &amp;SimpleService&#123;&#125;)</span><br><span class="line"></span><br><span class="line">	<span class="comment">//用服务器 Serve() 方法以及我们的端口信息区实现阻塞等待，直到进程被杀死或者 Stop() 被调用</span></span><br><span class="line">	err = grpcServer.Serve(listener)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"grpcServer.Serve err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行服务端</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go run server.go</span><br><span class="line">:<span class="number">8000</span> net.Listing...</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建Client端"><a href="#创建Client端" class="headerlink" title="创建Client端"></a>创建Client端</h3><p>1.创建调用服务端RouteList方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// routeList 调用服务端RouteList方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">routeList</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">//调用服务端RouteList方法，获流</span></span><br><span class="line">	stream, err := streamClient.RouteList(context.Background())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"Upload list err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> n := <span class="number">0</span>; n &lt; <span class="number">5</span>; n++ &#123;</span><br><span class="line">		<span class="comment">//向流中发送消息</span></span><br><span class="line">		err := stream.Send(&amp;pb.StreamRequest&#123;StreamData: <span class="string">"stream client rpc "</span> + strconv.Itoa(n)&#125;)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Fatalf(<span class="string">"stream request err: %v"</span>, err)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//关闭流并获取返回的消息</span></span><br><span class="line">	res, err := stream.CloseAndRecv()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"RouteList get response err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	log.Println(res)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2.启动gRPC客户端</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Address 连接地址</span></span><br><span class="line"><span class="keyword">const</span> Address <span class="keyword">string</span> = <span class="string">":8000"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> streamClient pb.StreamClientClient</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 连接服务器</span></span><br><span class="line">	conn, err := grpc.Dial(Address, grpc.WithInsecure())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"net.Connect err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 建立gRPC连接</span></span><br><span class="line">	streamClient = pb.NewStreamClientClient(conn)</span><br><span class="line">	routeList()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行客户端</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">go run client.go</span><br><span class="line">code:<span class="number">200</span> value:<span class="string">"hello grpc"</span></span><br><span class="line">value:<span class="string">"ok"</span></span><br></pre></td></tr></table></figure>
+
+<p>服务端不断从客户端获取到数据</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">stream client rpc <span class="number">0</span></span><br><span class="line">stream client rpc <span class="number">1</span></span><br><span class="line">stream client rpc <span class="number">2</span></span><br><span class="line">stream client rpc <span class="number">3</span></span><br><span class="line">stream client rpc <span class="number">4</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><p>服务端在没有接受完消息时候能主动停止接收数据吗（很少有这种场景）？</p>
+<p>答案：可以的，但是客户端代码需要注意EOF判断</p>
+<p>1.我们把服务端的RouteList方法实现稍微修改，当接收到一条数据后马上调用SendAndClose()关闭stream.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// RouteList 实现RouteList方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *SimpleService)</span> <span class="title">RouteList</span><span class="params">(srv pb.StreamClient_RouteListServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		<span class="comment">//从流中获取消息</span></span><br><span class="line">		res, err := srv.Recv()</span><br><span class="line">		<span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">			<span class="comment">//发送结果，并关闭</span></span><br><span class="line">			<span class="keyword">return</span> srv.SendAndClose(&amp;pb.SimpleResponse&#123;Value: <span class="string">"ok"</span>&#125;)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		log.Println(res.StreamData)</span><br><span class="line">		<span class="keyword">return</span> srv.SendAndClose(&amp;pb.SimpleResponse&#123;Value: <span class="string">"ok"</span>&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2.再把客户端调用RouteList方法的实现稍作修改</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// routeList 调用服务端RouteList方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">routeList</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">//调用服务端RouteList方法，获流</span></span><br><span class="line">	stream, err := streamClient.RouteList(context.Background())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"Upload list err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> n := <span class="number">0</span>; n &lt; <span class="number">5</span>; n++ &#123;</span><br><span class="line">		<span class="comment">//向流中发送消息</span></span><br><span class="line">		err := stream.Send(&amp;pb.StreamRequest&#123;StreamData: <span class="string">"stream client rpc "</span> + strconv.Itoa(n)&#125;)</span><br><span class="line">		<span class="comment">//发送也要检测EOF，当服务端在消息没接收完前主动调用SendAndClose()关闭stream，此时客户端还执行Send()，则会返回EOF错误，所以这里需要加上io.EOF判断</span></span><br><span class="line">		<span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Fatalf(<span class="string">"stream request err: %v"</span>, err)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//关闭流并获取返回的消息</span></span><br><span class="line">	res, err := stream.CloseAndRecv()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"RouteList get response err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	log.Println(res)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>客户端Send()需要检测err是否为EOF，因为当服务端在消息没接收完前主动调用SendAndClose()关闭stream，若此时客户端继续执行Send()，则会返回EOF错误。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本篇介绍了<code>客户端流式RPC</code>的简单使用，下篇将介绍<code>双向流式RPC</code>。</p>
+<p>教程源码地址：<a href="https://github.com/Bingjian-Zhu/go-grpc-example" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/go-grpc-example</a><br>参考：<a href="http://doc.oschina.net/grpc?t=60133" target="_blank" rel="noopener">gRPC官方文档中文版</a></p>
 
       
 
@@ -244,7 +274,7 @@
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Go Modules</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go gRPC</a>
         		</li>
       		
 		</ul>
@@ -300,7 +330,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/10/22/Go-Modules使用教程（3分钟学会）/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/14/Go-gRPC教程-客户端流式RPC（四）/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -314,18 +344,9 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/11/06/Gin实现依赖注入/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          Gin实现依赖注入
-        
-      </div>
-    </a>
   
-  
-    <a href="/2019/09/27/goroutine与调度器/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">goroutine与调度器</div>
+    <a href="/2020/04/13/Go-gRPC教程-服务端流式RPC（三）/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Go gRPC教程-服务端流式RPC（三）</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -344,19 +365,6 @@
             </div>
         </div>
         
-        
-        <div class="toc-container tooltip-left">
-            <i class="icon-font icon-category"></i>
-            <div class="tooltip tooltip-east">
-                <span class="tooltip-item">
-                </span>
-                <span class="tooltip-content">
-                    <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#使用教程"><span class="toc-number">2.</span> <span class="toc-text">使用教程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#go-mod文件解析"><span class="toc-number">3.</span> <span class="toc-text">go.mod文件解析</span></a></li></ol>
-                    </div>
-                </span>
-            </div>
-        </div>
         
     </div>
 </aside>
@@ -377,7 +385,7 @@
 <script src="https://billts.site/js/gitment.js"></script>
 <script>
 var gitment = new Gitment({
-  id: 'Tue Oct 22 2019 11:13:56 GMT+0800',
+  id: 'Tue Apr 14 2020 11:21:48 GMT+0800',
   owner: 'Bingjian-Zhu',
   repo: 'Bingjian-Zhu.github.io',
   oauth: {
