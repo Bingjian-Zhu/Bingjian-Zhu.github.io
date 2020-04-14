@@ -6,15 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives: 2019/9 | 烟花易冷的博客</title>
+  <title>Go gRPC教程-双向流式RPC（五） | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="烟花易冷的博客">
-<meta property="og:url" content="http://yoursite.com/archives/2019/09/index.html">
+  <meta name="description" content="前言上一篇介绍了客户端流式RPC，客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流的数据。本篇将介绍双向流式RPC。 双向流式RPC：客户端和服务端双方使用读写流去发送一个消息序列，两个流独立操作，双方可以同时发送和同时接收。">
+<meta name="keywords" content="Go,Go gRPC">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go gRPC教程-双向流式RPC（五）">
+<meta property="og:url" content="http://yoursite.com/2020/04/14/Go-gRPC教程-双向流式RPC（五）/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
+<meta property="og:description" content="前言上一篇介绍了客户端流式RPC，客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流的数据。本篇将介绍双向流式RPC。 双向流式RPC：客户端和服务端双方使用读写流去发送一个消息序列，两个流独立操作，双方可以同时发送和同时接收。">
 <meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2020-04-14T07:16:33.592Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="烟花易冷的博客">
+<meta name="twitter:title" content="Go gRPC教程-双向流式RPC（五）">
+<meta name="twitter:description" content="前言上一篇介绍了客户端流式RPC，客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流的数据。本篇将介绍双向流式RPC。 双向流式RPC：客户端和服务端双方使用读写流去发送一个消息序列，两个流独立操作，双方可以同时发送和同时接收。">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -152,36 +157,106 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-Go-gRPC教程-双向流式RPC（五）" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go gRPC教程-双向流式RPC（五）
+    </h1>
+  
+
+        
+        <a href="/2020/04/14/Go-gRPC教程-双向流式RPC（五）/" class="archive-article-date">
+  	<time datetime="2020-04-14T07:16:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-14</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>上一篇介绍了<code>客户端流式RPC</code>，客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流的数据。本篇将介绍<code>双向流式RPC</code>。</p>
+<p><code>双向流式RPC</code>：客户端和服务端双方使用读写流去发送一个消息序列，两个流独立操作，双方可以同时发送和同时接收。</p>
+<a id="more"></a>
+<h6 id="情景模拟：双方对话（可以一问一答、一问多答、多问一答，形式灵活）。"><a href="#情景模拟：双方对话（可以一问一答、一问多答、多问一答，形式灵活）。" class="headerlink" title="情景模拟：双方对话（可以一问一答、一问多答、多问一答，形式灵活）。"></a>情景模拟：双方对话（可以一问一答、一问多答、多问一答，形式灵活）。</h6><h3 id="新建proto文件"><a href="#新建proto文件" class="headerlink" title="新建proto文件"></a>新建proto文件</h3><p>新建both_stream.proto文件</p>
+<p>1.定义发送信息</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义流式请求信息</span></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">StreamRequest</span></span>&#123;</span><br><span class="line">    <span class="comment">//流请求参数</span></span><br><span class="line">    <span class="built_in">string</span> question = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2.定义接收信息</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义流式响应信息</span></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">StreamResponse</span></span>&#123;</span><br><span class="line">    <span class="comment">//流响应数据</span></span><br><span class="line">    <span class="built_in">string</span> answer = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>3.定义服务方法Conversations</p>
+<p>双向流式rpc，只要在请求的参数前和响应参数前都添加stream即可</p>
+<figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">service</span> <span class="title">Stream</span></span>&#123;</span><br><span class="line">    <span class="comment">// 双向流式rpc，同时在请求参数前和响应参数前加上stream</span></span><br><span class="line">    <span class="function"><span class="keyword">rpc</span> Conversations(stream StreamRequest) <span class="keyword">returns</span>(stream StreamResponse)&#123;&#125;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>4.编译proto文件</p>
+<p>进入both_stream.proto所在目录，运行指令:</p>
+<p><code>protoc --go_out=plugins=grpc:./ ./both_stream.proto</code></p>
+<h3 id="创建Server端"><a href="#创建Server端" class="headerlink" title="创建Server端"></a>创建Server端</h3><p>1.定义我们的服务，并实现RouteList方法</p>
+<p>这里简单实现对话中一问一答的形式</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// StreamService 定义我们的服务</span></span><br><span class="line"><span class="keyword">type</span> StreamService <span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"><span class="comment">// Conversations 实现Conversations方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *StreamService)</span> <span class="title">Conversations</span><span class="params">(srv pb.Stream_ConversationsServer)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	n := <span class="number">1</span></span><br><span class="line">	<span class="keyword">for</span> &#123;</span><br><span class="line">		req, err := srv.Recv()</span><br><span class="line">		<span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		err = srv.Send(&amp;pb.StreamResponse&#123;</span><br><span class="line">			Answer: <span class="string">"from stream server answer: the "</span> + strconv.Itoa(n) + <span class="string">" question is "</span> + req.Question,</span><br><span class="line">		&#125;)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> err</span><br><span class="line">		&#125;</span><br><span class="line">		n++</span><br><span class="line">		log.Printf(<span class="string">"from stream client question: %s"</span>, req.Question)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2.启动gRPC服务器</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	<span class="comment">// Address 监听地址</span></span><br><span class="line">	Address <span class="keyword">string</span> = <span class="string">":8000"</span></span><br><span class="line">	<span class="comment">// Network 网络通信协议</span></span><br><span class="line">	Network <span class="keyword">string</span> = <span class="string">"tcp"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 监听本地端口</span></span><br><span class="line">	listener, err := net.Listen(Network, Address)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"net.Listen err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	log.Println(Address + <span class="string">" net.Listing..."</span>)</span><br><span class="line">	<span class="comment">// 新建gRPC服务器实例</span></span><br><span class="line">	grpcServer := grpc.NewServer()</span><br><span class="line">	<span class="comment">// 在gRPC服务器注册我们的服务</span></span><br><span class="line">	pb.RegisterStreamServer(grpcServer, &amp;StreamService&#123;&#125;)</span><br><span class="line"></span><br><span class="line">	<span class="comment">//用服务器 Serve() 方法以及我们的端口信息区实现阻塞等待，直到进程被杀死或者 Stop() 被调用</span></span><br><span class="line">	err = grpcServer.Serve(listener)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"grpcServer.Serve err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行服务端</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go run server.go</span><br><span class="line">:<span class="number">8000</span> net.Listing...</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建Client端"><a href="#创建Client端" class="headerlink" title="创建Client端"></a>创建Client端</h3><p>1.创建调用服务端Conversations方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// conversations 调用服务端的Conversations方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">conversations</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">//调用服务端的Conversations方法，获取流</span></span><br><span class="line">	stream, err := streamClient.Conversations(context.Background())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"get conversations stream err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">for</span> n := <span class="number">0</span>; n &lt; <span class="number">5</span>; n++ &#123;</span><br><span class="line">		err := stream.Send(&amp;pb.StreamRequest&#123;Question: <span class="string">"stream client rpc "</span> + strconv.Itoa(n)&#125;)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Fatalf(<span class="string">"stream request err: %v"</span>, err)</span><br><span class="line">		&#125;</span><br><span class="line">		res, err := stream.Recv()</span><br><span class="line">		<span class="keyword">if</span> err == io.EOF &#123;</span><br><span class="line">			<span class="keyword">break</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			log.Fatalf(<span class="string">"Conversations get stream err: %v"</span>, err)</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 打印返回值</span></span><br><span class="line">		log.Println(res.Answer)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//最后关闭流</span></span><br><span class="line">	err = stream.CloseSend()</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"Conversations close stream err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2.启动gRPC客户端</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Address 连接地址</span></span><br><span class="line"><span class="keyword">const</span> Address <span class="keyword">string</span> = <span class="string">":8000"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> streamClient pb.StreamClient</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 连接服务器</span></span><br><span class="line">	conn, err := grpc.Dial(Address, grpc.WithInsecure())</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"net.Connect err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 建立gRPC连接</span></span><br><span class="line">	streamClient = pb.NewStreamClient(conn)</span><br><span class="line">	conversations()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行客户端，获取到服务端的应答</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">go run client.go</span><br><span class="line">from stream server answer: the <span class="number">1</span> question is stream client rpc <span class="number">0</span></span><br><span class="line">from stream server answer: the <span class="number">2</span> question is stream client rpc <span class="number">1</span></span><br><span class="line">from stream server answer: the <span class="number">3</span> question is stream client rpc <span class="number">2</span></span><br><span class="line">from stream server answer: the <span class="number">4</span> question is stream client rpc <span class="number">3</span></span><br><span class="line">from stream server answer: the <span class="number">5</span> question is stream client rpc <span class="number">4</span></span><br></pre></td></tr></table></figure>
+
+<p>服务端获取到来自客户端的提问</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">from stream client question: stream client rpc <span class="number">0</span></span><br><span class="line">from stream client question: stream client rpc <span class="number">1</span></span><br><span class="line">from stream client question: stream client rpc <span class="number">2</span></span><br><span class="line">from stream client question: stream client rpc <span class="number">3</span></span><br><span class="line">from stream client question: stream client rpc <span class="number">4</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本篇介绍了<code>双向流式RPC</code>的简单使用。</p>
+<p>教程源码地址：<a href="https://github.com/Bingjian-Zhu/go-grpc-example" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/go-grpc-example</a><br>参考：<a href="http://doc.oschina.net/grpc?t=60133" target="_blank" rel="noopener">gRPC官方文档中文版</a></p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://z-bj.xyz/pay/alipay.JPG">
+                      <span class="reward-type">支付宝</span>
+                    </div>
+                    
+                    
+                    <div class="reward-box-item">
+                      <img class="reward-img" src="http://z-bj.xyz/pay/wechatpay.JPG">
+                      <span class="reward-type">微信</span>
+                    </div>
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/27/goroutine与调度器/" class="archive-article-date">
-  	<time datetime="2019-09-27T02:56:55.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-27</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/27/goroutine与调度器/">goroutine与调度器</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -191,382 +266,127 @@
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">goroutine</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go gRPC</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/14/Go-gRPC教程-双向流式RPC（五）/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/25/channel使用技巧/" class="archive-article-date">
-  	<time datetime="2019-09-25T12:24:45.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-25</time>
-</a>
+<nav id="article-nav">
+  
+  
+    <a href="/2020/04/14/Go-gRPC教程-客户端流式RPC（四）/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Go gRPC教程-客户端流式RPC（四）</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
         </div>
-    	 
+        
+        
+    </div>
+</aside>
+
+
+
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/25/channel使用技巧/">Channel使用技巧</a>
-    </h1>
+  
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Channel</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/12/弄懂goroutine调度原理/" class="archive-article-date">
-  	<time datetime="2019-09-12T11:28:54.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-12</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/12/弄懂goroutine调度原理/">弄懂goroutine调度原理</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">goroutine</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/11/线程实现模型/" class="archive-article-date">
-  	<time datetime="2019-09-11T11:50:31.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-11</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/11/线程实现模型/">线程实现模型</a>
-    </h1>
   
 
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
   
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/05/录音并实时监测音量大小/" class="archive-article-date">
-  	<time datetime="2019-09-05T03:46:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-05</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/05/录音并实时监测音量大小/">录音并实时监测音量大小</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">.NET</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/03/gin-jwt对API进行权限控制/" class="archive-article-date">
-  	<time datetime="2019-09-03T13:18:49.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-03</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/03/gin-jwt对API进行权限控制/">gin-jwt对API进行权限控制</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gin</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ消息可靠性分析和应用/" class="archive-article-date">
-  	<time datetime="2019-09-01T15:16:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ消息可靠性分析和应用/">RabbitMQ消息可靠性分析和应用</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ教程（译）-RPC/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:06:34.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ教程（译）-RPC/">RabbitMQ教程（译）-RPC</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ教程（译）-Topics/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:05:39.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ教程（译）-Topics/">RabbitMQ教程（译）-Topics</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/09/01/RabbitMQ教程（译）-Routing/" class="archive-article-date">
-  	<time datetime="2019-09-01T03:05:20.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-01</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/09/01/RabbitMQ教程（译）-Routing/">RabbitMQ教程（译）-Routing</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
-
-    
-    <nav id="page-nav">
-      <span class="page-number current">1</span><a class="page-number" href="/archives/2019/09/page/2/">2</a><a class="extend next" rel="next" href="/archives/2019/09/page/2/">Next &raquo;</a>
-    </nav>
+  <div id="gitment-ctn"></div> 
+<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+<script src="https://billts.site/js/gitment.js"></script>
+<script>
+var gitment = new Gitment({
+  id: 'Tue Apr 14 2020 15:16:04 GMT+0800',
+  owner: 'Bingjian-Zhu',
+  repo: 'Bingjian-Zhu.github.io',
+  oauth: {
+    client_id: 'ea0e7d1f85b69731c83e',
+    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
+  },
+})
+gitment.render('gitment-ctn')
+</script>
   
 
 
@@ -595,8 +415,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
