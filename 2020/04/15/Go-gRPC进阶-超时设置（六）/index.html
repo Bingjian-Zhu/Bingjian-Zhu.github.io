@@ -6,24 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>goroutine与调度器 | 烟花易冷的博客</title>
+  <title>Go gRPC进阶-超时设置（六） | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="我们都知道Go语言是原生支持语言级并发的，这个并发的最小逻辑单元就是goroutine。">
-<meta name="keywords" content="Go,goroutine">
+  <meta name="description" content="前言gRPC默认的请求的超时时间是很长的，当你没有设置请求超时时间时，所有在运行的请求都占用大量资源且可能运行很长的时间，导致服务资源损耗过高，使得后来的请求响应过慢，甚至会引起整个进程崩溃。 为了避免这种情况，我们的服务应该设置超时时间。前面的入门教程提到，当客户端发起请求时候，需要传入上下文context.Context，用于结束超时或取消的请求。">
+<meta name="keywords" content="Go,Go gRPC">
 <meta property="og:type" content="article">
-<meta property="og:title" content="goroutine与调度器">
-<meta property="og:url" content="http://yoursite.com/2019/09/27/goroutine与调度器/index.html">
+<meta property="og:title" content="Go gRPC进阶-超时设置（六）">
+<meta property="og:url" content="http://yoursite.com/2020/04/15/Go-gRPC进阶-超时设置（六）/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
-<meta property="og:description" content="我们都知道Go语言是原生支持语言级并发的，这个并发的最小逻辑单元就是goroutine。">
+<meta property="og:description" content="前言gRPC默认的请求的超时时间是很长的，当你没有设置请求超时时间时，所有在运行的请求都占用大量资源且可能运行很长的时间，导致服务资源损耗过高，使得后来的请求响应过慢，甚至会引起整个进程崩溃。 为了避免这种情况，我们的服务应该设置超时时间。前面的入门教程提到，当客户端发起请求时候，需要传入上下文context.Context，用于结束超时或取消的请求。">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http://z-bj.xyz/goroutine/2019-9-27/1.jpeg">
-<meta property="og:image" content="http://z-bj.xyz/goroutine/2019-9-27/1.jpeg">
-<meta property="og:image" content="http://z-bj.xyz/goroutine/2019-9-27/2.jpg">
-<meta property="og:updated_time" content="2019-12-12T07:48:37.888Z">
+<meta property="og:updated_time" content="2020-04-15T00:49:46.322Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="goroutine与调度器">
-<meta name="twitter:description" content="我们都知道Go语言是原生支持语言级并发的，这个并发的最小逻辑单元就是goroutine。">
-<meta name="twitter:image" content="http://z-bj.xyz/goroutine/2019-9-27/1.jpeg">
+<meta name="twitter:title" content="Go gRPC进阶-超时设置（六）">
+<meta name="twitter:description" content="前言gRPC默认的请求的超时时间是很长的，当你没有设置请求超时时间时，所有在运行的请求都占用大量资源且可能运行很长的时间，导致服务资源损耗过高，使得后来的请求响应过慢，甚至会引起整个进程崩溃。 为了避免这种情况，我们的服务应该设置超时时间。前面的入门教程提到，当客户端发起请求时候，需要传入上下文context.Context，用于结束超时或取消的请求。">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -161,64 +157,51 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-goroutine与调度器" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-Go-gRPC进阶-超时设置（六）" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      goroutine与调度器
+      Go gRPC进阶-超时设置（六）
     </h1>
   
 
         
-        <a href="/2019/09/27/goroutine与调度器/" class="archive-article-date">
-  	<time datetime="2019-09-27T02:56:55.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-27</time>
+        <a href="/2020/04/15/Go-gRPC进阶-超时设置（六）/" class="archive-article-date">
+  	<time datetime="2020-04-15T00:49:03.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-15</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>我们都知道Go语言是原生支持语言级并发的，这个并发的最小逻辑单元就是goroutine。<a id="more"></a>goroutine就是Go语言提供的一种用户态线程，当然这种用户态线程是跑在内核级线程之上的。当我们创建了很多的goroutine，并且它们都是跑在同一个内核线程之上的时候，就需要一个调度器来维护这些goroutine，确保所有的goroutine都使用cpu，并且是尽可能公平的使用cpu资源。</p>
-<p>这个调度器的原理以及实现值得我们去深入研究一下。支撑整个调度器的主要有4个重要结构，分别是M、G、P、Sched，前三个定义在runtime.h中，Sched定义在proc.c中。</p>
-<p>Sched结构就是调度器，它维护有存储M和G的队列以及调度器的一些状态信息等。<br>M代表内核级线程，一个M就是一个线程，goroutine就是跑在M之上的；M是一个很大的结构，里面维护小对象内存cache（mcache）、当前执行的goroutine、随机数发生器等等非常多的信息。<br>P全称是Processor，处理器，它的主要用途就是用来执行goroutine的，所以它也维护了一个goroutine队列，里面存储了所有需要它来执行的goroutine，这个P的角色可能有一点让人迷惑，一开始容易和M冲突，后面重点聊一下它们的关系。<br>G就是goroutine实现的核心结构了，G维护了goroutine需要的栈、程序计数器以及它所在的M等信息。<br>理解M、P、G三者的关系对理解整个调度器非常重要，我从网络上找了一个图来说明其三者关系：<br><img src="http://z-bj.xyz/goroutine/2019-9-27/1.jpeg" alt="enter image description here"></p>
-<p>地鼠(gopher)用小车运着一堆待加工的砖。M就可以看作图中的地鼠，P就是小车，G就是小车里装的砖。一图胜千言啊，弄清楚了它们三者的关系，下面我们就开始重点聊地鼠是如何在搬运砖块的。</p>
-<h5 id="启动过程"><a href="#启动过程" class="headerlink" title="启动过程"></a>启动过程</h5><p>在关心绝大多数程序的内部原理的时候，我们都试图去弄明白其启动初始化过程，弄明白这个过程对后续的深入分析至关重要。在asm_amd64.s文件中的汇编代码_rt0_amd64就是整个启动过程，核心过程如下：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">CALL	runtime·args(SB)</span><br><span class="line">CALL	runtime·osinit(SB)</span><br><span class="line">CALL	runtime·hashinit(SB)</span><br><span class="line">CALL	runtime·schedinit(SB)</span><br><span class="line"></span><br><span class="line">// create a new goroutine to start program</span><br><span class="line">PUSHQ	$runtime·main·f(SB)		// entry</span><br><span class="line">PUSHQ	$0			// arg size</span><br><span class="line">CALL	runtime·newproc(SB)</span><br><span class="line">POPQ	AX</span><br><span class="line">POPQ	AX</span><br><span class="line"></span><br><span class="line">// start this M</span><br><span class="line">CALL	runtime·mstart(SB)</span><br></pre></td></tr></table></figure>
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>gRPC默认的请求的超时时间是很长的，当你没有设置请求超时时间时，所有在运行的请求都占用大量资源且可能运行很长的时间，导致服务资源损耗过高，使得后来的请求响应过慢，甚至会引起整个进程崩溃。</p>
+<p>为了避免这种情况，我们的服务应该设置超时时间。前面的<a href="https://github.com/Bingjian-Zhu/go-grpc-example" target="_blank" rel="noopener">入门教程</a>提到，当客户端发起请求时候，需要传入上下文<code>context.Context</code>，用于结束<code>超时</code>或<code>取消</code>的请求。</p>
+<a id="more"></a>
+<p>本篇以<a href="https://bingjian-zhu.github.io/2020/04/10/Go-gRPC%E6%95%99%E7%A8%8B-%E7%AE%80%E5%8D%95RPC%EF%BC%88%E4%BA%8C%EF%BC%89/" target="_blank" rel="noopener">简单RPC</a>为例，介绍如何设置gRPC请求的超时时间。</p>
+<h3 id="客户端请求设置超时时间"><a href="#客户端请求设置超时时间" class="headerlink" title="客户端请求设置超时时间"></a>客户端请求设置超时时间</h3><p>修改调用服务端方法</p>
+<p>1.把超时时间设置为当前时间+3秒</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">clientDeadline := time.Now().Add(time.Duration(<span class="number">3</span> * time.Second))</span><br><span class="line">ctx, cancel := context.WithDeadline(ctx, clientDeadline)</span><br><span class="line"><span class="keyword">defer</span> cancel()</span><br></pre></td></tr></table></figure>
 
-<p>启动过程做了调度器初始化runtime·schedinit后，调用runtime·newproc创建出第一个goroutine，这个goroutine将执行的函数是runtime·main，这第一个goroutine也就是所谓的主goroutine。我们写的最简单的Go程序”hello，world”就是完全跑在这个goroutine里，当然任何一个Go程序的入口都是从这个goroutine开始的。最后调用的runtime·mstart就是真正的执行上一步创建的主goroutine。</p>
-<p>启动过程中的调度器初始化runtime·schedinit函数主要根据用户设置的GOMAXPROCS值来创建一批小车(P)，不管GOMAXPROCS设置为多大，最多也只能创建256个小车(P)。这些小车(p)初始创建好后都是闲置状态，也就是还没开始使用，所以它们都放置在调度器结构(Sched)的pidle字段维护的链表中存储起来了，以备后续之需。</p>
-<p>查看runtime·main函数可以了解到主goroutine开始执行后，做的第一件事情是创建了一个新的内核线程(地鼠M)，不过这个线程是一个特殊线程，它在整个运行期专门负责做特定的事情——系统监控(sysmon)。接下来就是进入Go程序的main函数开始Go程序的执行。</p>
-<p>至此，Go程序就被启动起来开始运行了。一个真正干活的Go程序，一定创建有不少的goroutine，所以在Go程序开始运行后，就会向调度器添加goroutine，调度器就要负责维护好这些goroutine的正常执行。</p>
-<h5 id="创建goroutine-G"><a href="#创建goroutine-G" class="headerlink" title="创建goroutine(G)"></a>创建goroutine(G)</h5><p>在Go程序中，时常会有类似代码：</p>
-<p><code>go do_something()</code><br>go关键字就是用来创建一个goroutine的，后面的函数就是这个goroutine需要执行的代码逻辑。go关键字对应到调度器的接口就是runtime·newproc。runtime·newproc干的事情很简单，就负责制造一块砖(G)，然后将这块砖(G)放入当前这个地鼠(M)的小车(P)中。</p>
-<p>每个新的goroutine都需要有一个自己的栈，G结构的sched字段维护了栈地址以及程序计数器等信息，这是最基本的调度信息，也就是说这个goroutine放弃cpu的时候需要保存这些信息，待下次重新获得cpu的时候，需要将这些信息装载到对应的cpu寄存器中。</p>
-<p>假设这个时候已经创建了大量的goroutne，就轮到调度器去维护这些goroutine了。</p>
-<h5 id="创建内核线程-M"><a href="#创建内核线程-M" class="headerlink" title="创建内核线程(M)"></a>创建内核线程(M)</h5><p><img src="http://z-bj.xyz/goroutine/2019-9-27/1.jpeg" alt="enter image description here"></p>
-<p>Go程序中没有语言级的关键字让你去创建一个内核线程，你只能创建goroutine，内核线程只能由runtime根据实际情况去创建。runtime什么时候创建线程？以地鼠运砖图来讲，砖(G)太多了，地鼠(M)又太少了，实在忙不过来，刚好还有空闲的小车(P)没有使用，那就从别处再借些地鼠(M)过来直到把小车(p)用完为止。这里有一个地鼠(M)不够用，从别处借地鼠(M)的过程，这个过程就是创建一个内核线程(M)。创建M的接口函数是:</p>
-<p><code>void newm(void (*fn)(void), P *p)</code><br>newm函数的核心行为就是调用clone系统调用创建一个内核线程，每个内核线程的开始执行位置都是runtime·mstart函数。参数p就是一辆空闲的小车(p)。</p>
-<p>每个创建好的内核线程都从runtime·mstart函数开始执行了，它们将用分配给自己小车去搬砖了。</p>
-<h5 id="调度核心"><a href="#调度核心" class="headerlink" title="调度核心"></a>调度核心</h5><p>newm接口只是给新创建的M分配了一个空闲的P，也就是相当于告诉借来的地鼠(M)——“接下来的日子，你将使用1号小车搬砖，记住是1号小车；待会自己到停车场拿车。”，地鼠(M)去拿小车(P)这个过程就是acquirep。runtime·mstart在进入schedule之前会给当前M装配上P，runtime·mstart函数中的代码：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span>(m != &amp;runtime·m0) &#123;</span><br><span class="line">	acquirep(m-&gt;nextp);</span><br><span class="line">	m-&gt;nextp = <span class="literal">nil</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>2.响应错误检测中添加超时检测</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">      <span class="comment">// 传入超时时间为3秒的ctx</span></span><br><span class="line">res, err := grpcClient.Route(ctx, &amp;req)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">	<span class="comment">//获取错误状态</span></span><br><span class="line">	statu, ok := status.FromError(err)</span><br><span class="line">	<span class="keyword">if</span> ok &#123;</span><br><span class="line">		<span class="comment">//判断是否为调用超时</span></span><br><span class="line">		<span class="keyword">if</span> statu.Code() == codes.DeadlineExceeded &#123;</span><br><span class="line">			log.Fatalln(<span class="string">"Route timeout!"</span>)</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	log.Fatalf(<span class="string">"Call Route err: %v"</span>, err)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 打印返回值</span></span><br><span class="line">log.Println(res.Value)</span><br></pre></td></tr></table></figure>
 
-<p>schedule();<br>if分支的内容就是为当前M装配上P，nextp就是newm分配的空闲小车(P)，只是到这个时候才真正拿到手罢了。没有P，M是无法执行goroutine的，就像地鼠没有小车无法运砖一样的道理。对应acquirep的动作是releasep，把M装配的P给载掉；活干完了，地鼠需要休息了，就把小车还到停车场，然后睡觉去。</p>
-<p>地鼠(M)拿到属于自己的小车(P)后，就进入工场开始干活了，也就是上面的schedule调用。简化schedule的代码如下：</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">static void</span><br><span class="line">schedule(void)</span><br><span class="line">&#123;</span><br><span class="line">	G *gp;</span><br><span class="line">	gp = runqget(m-&gt;p);</span><br><span class="line">	<span class="keyword">if</span>(gp == <span class="literal">nil</span>)</span><br><span class="line">		gp = findrunnable();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (m-&gt;p-&gt;runqhead != m-&gt;p-&gt;runqtail &amp;&amp;</span><br><span class="line">		runtime·atomicload(&amp;runtime·sched.nmspinning) == <span class="number">0</span> &amp;&amp;</span><br><span class="line">		runtime·atomicload(&amp;runtime·sched.npidle) &gt; <span class="number">0</span>)  <span class="comment">// <span class="doctag">TODO:</span> fast atomic</span></span><br><span class="line">		wakep();</span><br><span class="line"></span><br><span class="line">	execute(gp);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>完整的<a href="https://github.com/Bingjian-Zhu/go-grpc-example/blob/master/6-grpc_deadlines/client/client.go" target="_blank" rel="noopener">client.go</a>代码</p>
+<h3 id="服务端判断请求是否超时"><a href="#服务端判断请求是否超时" class="headerlink" title="服务端判断请求是否超时"></a>服务端判断请求是否超时</h3><p>当请求超时后，服务端应该停止正在进行的操作，避免资源浪费。事实上，我并不能很好控制服务端停止工作而避免资源浪费，只能尽量减少资源浪费。一般地，在耗时操作或写库前进行超时检测，发现超时就停止工作。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Route 实现Route方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *SimpleService)</span> <span class="title">Route</span><span class="params">(ctx context.Context, req *pb.SimpleRequest)</span> <span class="params">(*pb.SimpleResponse, error)</span></span> &#123;</span><br><span class="line">	timeout := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">struct</span>&#123;&#125;, <span class="number">1</span>)</span><br><span class="line">	data := <span class="built_in">make</span>(<span class="keyword">chan</span> *pb.SimpleResponse, <span class="number">1</span>)</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		time.Sleep(<span class="number">4</span> * time.Second)</span><br><span class="line">		res := pb.SimpleResponse&#123;</span><br><span class="line">			Code:  <span class="number">200</span>,</span><br><span class="line">			Value: <span class="string">"hello "</span> + req.Data,</span><br><span class="line">		&#125;</span><br><span class="line">		log.Println(<span class="string">"goroutine still running"</span>)</span><br><span class="line">		data &lt;- &amp;res</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">if</span> ctx.Err() == context.Canceled &#123;</span><br><span class="line">				timeout &lt;- <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br><span class="line">	<span class="keyword">select</span> &#123;</span><br><span class="line">	<span class="keyword">case</span> res := &lt;-data:</span><br><span class="line">		<span class="keyword">return</span> res, <span class="literal">nil</span></span><br><span class="line">	<span class="keyword">case</span> &lt;-timeout:</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, status.Errorf(codes.Canceled, <span class="string">"Client cancelled, abandoning."</span>)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>schedule函数被我简化了太多，主要是我不喜欢贴大段大段的代码，因此只保留主干代码了。这里涉及到4大步逻辑：</p>
-<p><img src="http://z-bj.xyz/goroutine/2019-9-27/2.jpg" alt="enter image description here"><br>runqget, 地鼠(M)试图从自己的小车(P)取出一块砖(G)，当然结果可能失败，也就是这个地鼠的小车已经空了，没有砖了。<br>findrunnable, 如果地鼠自己的小车中没有砖，那也不能闲着不干活是吧，所以地鼠就会试图跑去工场仓库取一块砖来处理；工场仓库也可能没砖啊，出现这种情况的时候，这个地鼠也没有偷懒停下干活，而是悄悄跑出去，随机盯上一个小伙伴(地鼠)，然后从它的车里试图偷一半砖到自己车里。如果多次尝试偷砖都失败了，那说明实在没有砖可搬了，这个时候地鼠就会把小车还回停车场，然后睡觉休息了。如果地鼠睡觉了，下面的过程当然都停止了，地鼠睡觉也就是线程sleep了。<br>wakep, 到这个过程的时候，可怜的地鼠发现自己小车里有好多砖啊，自己根本处理不过来；再回头一看停车场居然有闲置的小车，立马跑到宿舍一看，你妹，居然还有小伙伴在睡觉，直接给屁股一脚，“你妹，居然还在睡觉，老子都快累死了，赶紧起来干活，分担点工作。”，小伙伴醒了，拿上自己的小车，乖乖干活去了。有时候，可怜的地鼠跑到宿舍却发现没有在睡觉的小伙伴，于是会很失望，最后只好向工场老板说——”停车场还有闲置的车啊，我快干不动了，赶紧从别的工场借个地鼠来帮忙吧。”，最后工场老板就搞来一个新的地鼠干活了。<br>execute，地鼠拿着砖放入火种欢快的烧练起来。<br>注： “地鼠偷砖”叫work stealing，一种调度算法。</p>
-<p>到这里，貌似整个工场都正常的运转起来了，无懈可击的样子。不对，还有一个疑点没解决啊，假设地鼠的车里有很多砖，它把一块砖放入火炉中后，何时把它取出来，放入第二块砖呢？难道要一直把第一块砖烧练好，才取出来吗？那估计后面的砖真的是等得花儿都要谢了。这里就是要真正解决goroutine的调度，上下文切换问题。</p>
-<h5 id="调度点"><a href="#调度点" class="headerlink" title="调度点"></a>调度点</h5><p>当我们翻看channel的实现代码可以发现，对channel读写操作的时候会触发调用runtime·park函数。goroutine调用park后，这个goroutine就会被设置位waiting状态，放弃cpu。被park的goroutine处于waiting状态，并且这个goroutine不在小车(P)中，如果不对其调用runtime·ready，它是永远不会再被执行的。除了channel操作外，定时器中，网络poll等都有可能park goroutine。</p>
-<p>除了park可以放弃cpu外，调用runtime·gosched函数也可以让当前goroutine放弃cpu，但和park完全不同；gosched是将goroutine设置为runnable状态，然后放入到调度器全局等待队列（也就是上面提到的工场仓库，这下就明白为何工场仓库会有砖块(G)了吧）。</p>
-<p>除此之外，就轮到系统调用了，有些系统调用也会触发重新调度。Go语言完全是自己封装的系统调用，所以在封装系统调用的时候，可以做不少手脚，也就是进入系统调用的时候执行entersyscall，退出后又执行exitsyscall函数。 也只有封装了entersyscall的系统调用才有可能触发重新调度，它将改变小车(P)的状态为syscall。还记一开始提到的sysmon线程吗？这个系统监控线程会扫描所有的小车(P)，发现一个小车(P)处于了syscall的状态，就知道这个小车(P)遇到了goroutine在做系统调用，于是系统监控线程就会创建一个新的地鼠(M)去把这个处于syscall的小车给抢过来，开始干活，这样这个小车中的所有砖块(G)就可以绕过之前系统调用的等待了。被抢走小车的地鼠等系统调用返回后，发现自己的车没，不能继续干活了，于是只能把执行系统调用的goroutine放回到工场仓库，自己睡觉去了。</p>
-<p>从goroutine的调度点可以看出，调度器还是挺粗暴的，调度粒度有点过大，公平性也没有想想的那么好。总之，这个调度器还是比较简单的。</p>
-<h5 id="现场处理"><a href="#现场处理" class="headerlink" title="现场处理"></a>现场处理</h5><p>goroutine在cpu上换入换出，不断上下文切换的时候，必须要保证的事情就是保存现场和恢复现场，保存现场就是在goroutine放弃cpu的时候，将相关寄存器的值给保存到内存中；恢复现场就是在goroutine重新获得cpu的时候，需要从内存把之前的寄存器信息全部放回到相应寄存器中去。</p>
-<p>goroutine在主动放弃cpu的时候(park/gosched)，都会涉及到调用runtime·mcall函数，此函数也是汇编实现，主要将goroutine的栈地址和程序计数器保存到G结构的sched字段中，mcall就完成了现场保存。恢复现场的函数是runtime·gogocall，这个函数主要在execute中调用，就是在执行goroutine前，需要重新装载相应的寄存器。</p>
-<blockquote>
-<p><a href="http://skoo.me/go/2013/11/29/golang-schedule?utm_campaign=studygolang.com&utm_medium=studygolang.com&utm_source=studygolang.com" target="_blank" rel="noopener">原文地址</a>  by skoo</p>
-</blockquote>
+<p>上面这段代码，当超时后，获取数据的goroutine仍然在运行，并不能避免资源浪费。所以还是那句话，在耗时操作或写库前进行超时检测，发现超时就停止工作。除非找到更好解决的解决方案。</p>
+<p>完整<a href="https://github.com/Bingjian-Zhu/go-grpc-example/tree/master/6-grpc_deadlines/server/server.go" target="_blank" rel="noopener">server.go</a>代码</p>
+<h3 id="运行结果"><a href="#运行结果" class="headerlink" title="运行结果"></a>运行结果</h3><p>服务端：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">:<span class="number">8000</span> net.Listing...</span><br><span class="line">goroutine still running</span><br></pre></td></tr></table></figure>
+
+<p>客户端：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Route timeout!</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>超时时间的长短需要根据自身服务而定，例如返回一个<code>hello grpc</code>，可能只需要几十毫秒，然而处理大量数据的同步操作则可能要很长时间。需要考虑多方面因素来决定这个超时时间，例如系统间端到端的延时，哪些RPC是串行的，哪些是可以并行的等等。</p>
+<p>教程源码地址：<a href="https://github.com/Bingjian-Zhu/go-grpc-example" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/go-grpc-example</a><br>参考：<a href="https://grpc.io/blog/deadlines/" target="_blank" rel="noopener">https://grpc.io/blog/deadlines/</a></p>
 
       
 
@@ -267,7 +250,7 @@
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">goroutine</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go gRPC</a>
         		</li>
       		
 		</ul>
@@ -323,7 +306,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/27/goroutine与调度器/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/15/Go-gRPC进阶-超时设置（六）/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -337,18 +320,9 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/10/22/Go-Modules使用教程（3分钟学会）/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          Go Modules使用教程（3分钟学会）
-        
-      </div>
-    </a>
   
-  
-    <a href="/2019/09/25/channel使用技巧/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Channel使用技巧</div>
+    <a href="/2020/04/14/Go-gRPC教程-双向流式RPC（五）/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Go gRPC教程-双向流式RPC（五）</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -367,19 +341,6 @@
             </div>
         </div>
         
-        
-        <div class="toc-container tooltip-left">
-            <i class="icon-font icon-category"></i>
-            <div class="tooltip tooltip-east">
-                <span class="tooltip-item">
-                </span>
-                <span class="tooltip-content">
-                    <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#启动过程"><span class="toc-number">1.</span> <span class="toc-text">启动过程</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#创建goroutine-G"><span class="toc-number">2.</span> <span class="toc-text">创建goroutine(G)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#创建内核线程-M"><span class="toc-number">3.</span> <span class="toc-text">创建内核线程(M)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#调度核心"><span class="toc-number">4.</span> <span class="toc-text">调度核心</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#调度点"><span class="toc-number">5.</span> <span class="toc-text">调度点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#现场处理"><span class="toc-number">6.</span> <span class="toc-text">现场处理</span></a></li></ol>
-                    </div>
-                </span>
-            </div>
-        </div>
         
     </div>
 </aside>
@@ -400,7 +361,7 @@
 <script src="https://billts.site/js/gitment.js"></script>
 <script>
 var gitment = new Gitment({
-  id: 'Fri Sep 27 2019 10:56:55 GMT+0800',
+  id: 'Wed Apr 15 2020 08:49:03 GMT+0800',
   owner: 'Bingjian-Zhu',
   repo: 'Bingjian-Zhu.github.io',
   oauth: {
