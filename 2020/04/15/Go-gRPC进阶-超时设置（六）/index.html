@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="烟花易冷的博客">
 <meta property="og:description" content="前言gRPC默认的请求的超时时间是很长的，当你没有设置请求超时时间时，所有在运行的请求都占用大量资源且可能运行很长的时间，导致服务资源损耗过高，使得后来的请求响应过慢，甚至会引起整个进程崩溃。 为了避免这种情况，我们的服务应该设置超时时间。前面的入门教程提到，当客户端发起请求时候，需要传入上下文context.Context，用于结束超时或取消的请求。">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2020-04-15T00:49:46.322Z">
+<meta property="og:updated_time" content="2020-04-15T00:57:25.117Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Go gRPC进阶-超时设置（六）">
 <meta name="twitter:description" content="前言gRPC默认的请求的超时时间是很长的，当你没有设置请求超时时间时，所有在运行的请求都占用大量资源且可能运行很长的时间，导致服务资源损耗过高，使得后来的请求响应过慢，甚至会引起整个进程崩溃。 为了避免这种情况，我们的服务应该设置超时时间。前面的入门教程提到，当客户端发起请求时候，需要传入上下文context.Context，用于结束超时或取消的请求。">
@@ -320,6 +320,15 @@
   
 <nav id="article-nav">
   
+    <a href="/2020/04/16/Go-gRPC进阶-TLS认证-自定义方法认证（七）/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          Go gRPC进阶-TLS认证+自定义方法认证（七）
+        
+      </div>
+    </a>
+  
   
     <a href="/2020/04/14/Go-gRPC教程-双向流式RPC（五）/" id="article-nav-older" class="article-nav-link-wrap">
       <div class="article-nav-title">Go gRPC教程-双向流式RPC（五）</div>
@@ -341,6 +350,19 @@
             </div>
         </div>
         
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#客户端请求设置超时时间"><span class="toc-number">2.</span> <span class="toc-text">客户端请求设置超时时间</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#服务端判断请求是否超时"><span class="toc-number">3.</span> <span class="toc-text">服务端判断请求是否超时</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#运行结果"><span class="toc-number">4.</span> <span class="toc-text">运行结果</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
         
     </div>
 </aside>
@@ -473,7 +495,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
+                <a href="javascript:void(0)" class="js-tag color3">Go gRPC</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -481,19 +503,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Go gRPC</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Channel</a>
+                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">vue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Channel</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -505,11 +523,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
+                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
               </li>
             
             <div class="clearfix"></div>

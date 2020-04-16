@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="烟花易冷的博客">
 <meta property="og:description" content="前言上一篇介绍了客户端流式RPC，客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流的数据。本篇将介绍双向流式RPC。 双向流式RPC：客户端和服务端双方使用读写流去发送一个消息序列，两个流独立操作，双方可以同时发送和同时接收。">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2020-04-14T07:16:33.592Z">
+<meta property="og:updated_time" content="2020-04-15T00:57:26.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Go gRPC教程-双向流式RPC（五）">
 <meta name="twitter:description" content="前言上一篇介绍了客户端流式RPC，客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流的数据。本篇将介绍双向流式RPC。 双向流式RPC：客户端和服务端双方使用读写流去发送一个消息序列，两个流独立操作，双方可以同时发送和同时接收。">
@@ -367,6 +367,19 @@
         </div>
         
         
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#情景模拟：双方对话（可以一问一答、一问多答、多问一答，形式灵活）。"><span class="toc-number">1.0.0.1.</span> <span class="toc-text">情景模拟：双方对话（可以一问一答、一问多答、多问一答，形式灵活）。</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#新建proto文件"><span class="toc-number">2.</span> <span class="toc-text">新建proto文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建Server端"><span class="toc-number">3.</span> <span class="toc-text">创建Server端</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建Client端"><span class="toc-number">4.</span> <span class="toc-text">创建Client端</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
     </div>
 </aside>
 
@@ -498,7 +511,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
+                <a href="javascript:void(0)" class="js-tag color3">Go gRPC</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -506,19 +519,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Go gRPC</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Channel</a>
+                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">vue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Channel</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -530,11 +539,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
+                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
               </li>
             
             <div class="clearfix"></div>

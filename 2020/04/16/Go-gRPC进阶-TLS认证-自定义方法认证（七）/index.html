@@ -6,39 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>使用Docker部署.NET Core程序 | 烟花易冷的博客</title>
+  <title>Go gRPC进阶-TLS认证+自定义方法认证（七） | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="一、Docker简介Docker是基于Linux容器技术（LXC），使用Go语言实现的开源项目，诞生于2013年，遵循Apache2.0协议。Docker自开源后，受到广泛的关注和讨论。">
-<meta name="keywords" content="docker,.NET Core">
+  <meta name="description" content="前言前面篇章的gRPC都是明文传输的，容易被篡改数据。本章将介绍如何为gRPC添加安全机制，包括TLS证书认证和Token认证。">
+<meta name="keywords" content="Go,Go gRPC">
 <meta property="og:type" content="article">
-<meta property="og:title" content="使用Docker部署.NET Core程序">
-<meta property="og:url" content="http://yoursite.com/2019/08/28/使用Docker部署NET-Core程序/index.html">
+<meta property="og:title" content="Go gRPC进阶-TLS认证+自定义方法认证（七）">
+<meta property="og:url" content="http://yoursite.com/2020/04/16/Go-gRPC进阶-TLS认证-自定义方法认证（七）/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
-<meta property="og:description" content="一、Docker简介Docker是基于Linux容器技术（LXC），使用Go语言实现的开源项目，诞生于2013年，遵循Apache2.0协议。Docker自开源后，受到广泛的关注和讨论。">
+<meta property="og:description" content="前言前面篇章的gRPC都是明文传输的，容易被篡改数据。本章将介绍如何为gRPC添加安全机制，包括TLS证书认证和Token认证。">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/1.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/2.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/3.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/4.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/5.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/6.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/7.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/8.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/9.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/10.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/11.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/12.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/13.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/14.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/15.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/16.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/17.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-28/18.png">
-<meta property="og:updated_time" content="2019-12-12T07:48:37.918Z">
+<meta property="og:updated_time" content="2020-04-16T00:55:42.578Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="使用Docker部署.NET Core程序">
-<meta name="twitter:description" content="一、Docker简介Docker是基于Linux容器技术（LXC），使用Go语言实现的开源项目，诞生于2013年，遵循Apache2.0协议。Docker自开源后，受到广泛的关注和讨论。">
-<meta name="twitter:image" content="http://z-bj.xyz/docker/2019-8-28/1.png">
+<meta name="twitter:title" content="Go gRPC进阶-TLS认证+自定义方法认证（七）">
+<meta name="twitter:description" content="前言前面篇章的gRPC都是明文传输的，容易被篡改数据。本章将介绍如何为gRPC添加安全机制，包括TLS证书认证和Token认证。">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -176,79 +157,96 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-使用Docker部署NET-Core程序" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-Go-gRPC进阶-TLS认证-自定义方法认证（七）" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      使用Docker部署.NET Core程序
+      Go gRPC进阶-TLS认证+自定义方法认证（七）
     </h1>
   
 
         
-        <a href="/2019/08/28/使用Docker部署NET-Core程序/" class="archive-article-date">
-  	<time datetime="2019-08-28T15:15:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-28</time>
+        <a href="/2020/04/16/Go-gRPC进阶-TLS认证-自定义方法认证（七）/" class="archive-article-date">
+  	<time datetime="2020-04-16T00:54:34.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-16</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="一、Docker简介"><a href="#一、Docker简介" class="headerlink" title="一、Docker简介"></a>一、Docker简介</h3><p>Docker是基于Linux容器技术（LXC），使用Go语言实现的开源项目，诞生于2013年，遵循Apache2.0协议。Docker自开源后，受到广泛的关注和讨论。</p>
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>前面篇章的gRPC都是明文传输的，容易被篡改数据。本章将介绍如何为gRPC添加安全机制，包括TLS证书认证和Token认证。</p>
 <a id="more"></a>
-<p>（1）Docker在开发和运维中的优势：<br><strong>更快的交付和部署</strong><br>使用Docker，开发人员可以使用镜像来快速构建一套标准的开发环境，开发完后，测试和运维人员可以直接使用完全相同的环境来部署代码，实现了生产环境的无缝运行。</p>
-<p><strong>更高效的资源利用</strong><br>Docker容器的运行不需要额外的虚拟化管理程序支持，它是内核级的虚拟化 ，可以实现更高的性能，同时对资源的额外需求很低。<br><strong>更轻松的迁移和扩展</strong><br>Docker容器几乎可以在任意的平台上运行，支持主流的操作系统发行版本。这种兼容性让用户可以在不同平台之间轻松地迁移应用。</p>
-<p><strong>更简单的更新管理</strong><br>使用Dockerfile，只需要修改一点点配置，就可以替代以往大量的更新工作。并且所有的修改都以增量的方式被分布和更新，从而实现自动化且高效的容器管理。</p>
-<h4 id="（2）概念认知"><a href="#（2）概念认知" class="headerlink" title="（2）概念认知"></a>（2）概念认知</h4><p><strong>Docker镜像</strong><br>Docker镜像类似于虚拟机镜像，可以将它理解为一个只读的模板。镜像是创建Docker容器的基础。通过版本管理和增量的文件系统，Docker提供了一套十分简单的机制和创建和更新现有的镜像，用户可以直接从网上下载一个已经做好的应用镜像，并直接使用。</p>
-<p><strong>Docker容器</strong><br> Docker容器类似于一个轻量级的沙箱，Docker利用容器来运行和隔离应用。容器是从镜像创建的应用运行实例。可以将其启动、开始、停止、删除，而这些容器都是彼此相互隔离的，互不可见的。<br> 可以把容器看做一个简易版的Linux系统环境（包括root用户权限、进程空间、用户空间和网络空间）以及运行在其中的应用程序打包而成的盒子。</p>
-<p><strong>Docker仓库</strong><br>Docker仓库类似于代码仓库，它是Docker集中存放镜像文件的场所。它的设计理念与Git类似。Docker镜像库分公开仓库和私有仓库。最大的公开仓库是官方提供的Docker Hub。当然，如果不想公开镜像，可以搭建自己的私有仓库。</p>
-<p><strong>Dockerfile</strong><br>一般介绍完以上三个概念就结束了，但我在这里要介绍下Dockerfile，因为镜像的好坏很大程度取决于Dockerfile。Dockerfile是一个文本格式的配置文件，用户可以使用Dockerfile来快速创建自定义的镜像。</p>
-<hr>
-<h3 id="二、制作Docker镜像"><a href="#二、制作Docker镜像" class="headerlink" title="二、制作Docker镜像"></a>二、制作Docker镜像</h3><blockquote>
-<p>安装Docker for Windows，系统需求：Windows 10 64bit: Pro, Enterprise or<br>Education Visual Studio2017 v15.6或以上</p>
-</blockquote>
-<p>（1）新建一个Web API程序<br><img src="http://z-bj.xyz/docker/2019-8-28/1.png" alt></p>
-<p>（2）添加Docker支持<br>右键项目-&gt;添加-&gt;Docker支持<br><img src="http://z-bj.xyz/docker/2019-8-28/2.png" alt><br>选择Linux目标操作系统（Windows目标平台的镜像只能在Windows平台运行，而Linux目标平台的镜像既能在Linux平台下运行，也能在新版Win10下运行，因为新版Win10带Linux系统）<br><img src="http://z-bj.xyz/docker/2019-8-28/3.png" alt><br>之后VS会自动生成一个Dockerfile文件，暂先不讨论它的优劣。<br><img src="http://z-bj.xyz/docker/2019-8-28/4.png" alt></p>
-<p>（3）添加docker-compose<br>右键项目-&gt;添加-&gt;容器业务流程协调程序支持<br><img src="http://z-bj.xyz/docker/2019-8-28/5.png" alt><br>Visual Studio Tools for Docker 通过以下文件向解决方案添加 <code>docker-compose</code> 项目：<br><code>dockerignore</code>列出在生成上下文时要排除的文件和目录类型。<br><code>docker-compose.yml</code>基本 Docker Compose 文件，用于分别定义通过 docker-compose build 和 docker-compose run 生成和运行的映像集合。<br><code>docker compose.override.yml</code>一个可选文件，通过 Docker Compose 读取，包含服务的配置替代。 Visual Studio 执行 docker-compose -f “docker-compose.yml” -f “docker-compose.override.yml” 以合并这些文件。</p>
-<p>可以看到输出，在Debug模式下，Visual Studio Tools for Docker已经帮我们新建镜像myapi:dev，dev是镜像的标签。而在Release模式下运行，会生成myapi:latest镜像。<br><img src="http://z-bj.xyz/docker/2019-8-28/6.png" alt><br>在命令行中输入：<code>docker images</code></p>
-<p>可以看大此镜像。TAG是镜像的标签，IMAGE ID是镜像的唯一标识，CREATED是镜像创建时间，SIZE为镜像大小，优秀的镜像往往体积都较小。<br><img src="http://z-bj.xyz/docker/2019-8-28/7.png" alt><br>（4）Debug程序<br>在Debug模式下运行程序，成功返回[“value1”,”value2”]<br> 我们来看它的容器，输入指令：<code>docker ps -a</code><br><img src="http://z-bj.xyz/docker/2019-8-28/8.png" alt><br>  可以看到容器状态STATUS为UP，已经启动了12分钟。状态为Exited为停止状态。</p>
-<p>（5）Release编译<br>然后换成Release模式，重新生成项目，成功生成myapi:latest镜像。<br><img src="http://z-bj.xyz/docker/2019-8-28/9.png" alt><br> 这步操作可以改成cmd进入Dockerfile所在目录，输入指令：<code>docker-compose build</code><br> 然后输入指令：<code>docker run -it -p 52333:80 myapi:latest</code></p>
+<h3 id="TLS证书认证"><a href="#TLS证书认证" class="headerlink" title="TLS证书认证"></a>TLS证书认证</h3><h6 id="什么是TLS"><a href="#什么是TLS" class="headerlink" title="什么是TLS"></a>什么是TLS</h6><p>TLS（Transport Layer Security，安全传输层)，TLS是建立在<code>传输层</code>TCP协议之上的协议，服务于应用层，它的前身是SSL（Secure Socket Layer，安全套接字层），它实现了将应用层的报文进行加密后再交由TCP进行传输的功能。</p>
+<h6 id="TLS的作用"><a href="#TLS的作用" class="headerlink" title="TLS的作用"></a>TLS的作用</h6><p>TLS协议主要解决如下三个网络安全问题。</p>
+<ul>
+<li>保密(message privacy)，保密通过加密encryption实现，所有信息都加密传输，第三方无法嗅探；</li>
+<li>完整性(message integrity)，通过MAC校验机制，一旦被篡改，通信双方会立刻发现；</li>
+<li>认证(mutual authentication)，双方认证,双方都可以配备证书，防止身份被冒充；</li>
+</ul>
+<h4 id="生成私钥"><a href="#生成私钥" class="headerlink" title="生成私钥"></a>生成私钥</h4><p>生成RSA私钥：<code>openssl genrsa -out server.key 2048</code></p>
 <blockquote>
-<p> -i: 保持标准输入打开，默认为false<br> -t: 是否分配虚拟终端，默认为false<br> -p: 映射到本地主机的临时端口</p>
+<p>生成RSA私钥，命令的最后一个参数，将指定生成密钥的位数，如果没有指定，默认512</p>
 </blockquote>
-<p><img src="http://z-bj.xyz/docker/2019-8-28/10.png" alt><br> 成功运行镜像，浏览器打开：<a href="http://localhost:52333/api/values" target="_blank" rel="noopener">http://localhost:52333/api/values</a><br>可获得返回值，可以看出，新版Win10是可以运行目标平台为Linux的镜像。</p>
-<hr>
-<h3 id="三、服务器上运行镜像"><a href="#三、服务器上运行镜像" class="headerlink" title="三、服务器上运行镜像"></a>三、服务器上运行镜像</h3><blockquote>
-<p>首先需要注册Docker<br>Hub账号，我注册时候是有坑的，注册系统需要做人机检测，需要翻墙才能完成。官网地址：<a href="https://hub.docker.com/" target="_blank" rel="noopener">https://hub.docker.com/</a></p>
+<p>生成ECC私钥：<code>openssl ecparam -genkey -name secp384r1 -out server.key</code></p>
+<blockquote>
+<p>生成ECC私钥，命令为椭圆曲线密钥参数生成及操作，本文中ECC曲线选择的是secp384r1</p>
 </blockquote>
-<p>（1）打标签<br>输入：<code>docker tag ed159c1011fd zhubingjian/myapi:1.0.0</code><br>其中ed159c1011fd为myapi:latest的IMAGE ID。可以看到，多了一个zhubingjian/myapi:1.0.0镜像，它的IMAGE ID和myapi:latest的相同。<br><img src="http://z-bj.xyz/docker/2019-8-28/11.png" alt></p>
-<p>（2）推送镜像到Docker Hub<br> 输入指令：<code>docker login</code><br>  一般需要输入账号和密码，由于我的Docker是登录状态，所以不用输入<br><img src="http://z-bj.xyz/docker/2019-8-28/12.png" alt><br>输入指令：<code>docker push zhubingjian/myapi:1.0.0</code><br><img src="http://z-bj.xyz/docker/2019-8-28/13.png" alt><br> 然后登录自己的Docker Hub，查看网站上的镜像。<br><img src="http://z-bj.xyz/docker/2019-8-28/14.png" alt></p>
-<p>（3）拉取镜像并运行<br>打开Ubuntu，输入指令：<code>docker pull zhubingjian/myapi:1.0.0</code><br>这个镜像是公开的，其他人也可按这个方式获取<br><img src="http://z-bj.xyz/docker/2019-8-28/15.png" alt><br>输入指令，运行镜像：<code>docker run –it –p 52998:80 zhubingjian/myapi:1.0.0</code><br><img src="http://z-bj.xyz/docker/2019-8-28/16.png" alt><br>新开一个终端，输入指令，测试获取返回值：<code>curl http://localhost:52998/api/values</code><br><img src="http://z-bj.xyz/docker/2019-8-28/17.png" alt></p>
-<hr>
-<h3 id="四、Nginx配置反向代理"><a href="#四、Nginx配置反向代理" class="headerlink" title="四、Nginx配置反向代理"></a>四、Nginx配置反向代理</h3><p>最后在Nginx的配置文件中加一段配置，注意端口52998要对应上一步的</p>
-<pre><code>server {
-    listen        52999;
-    server_name   服务器IP;            
-  #  access_log    /var/log/nginx/rap_access.log;
-  #  charset           utf-8;
-  #  autoindex off;
+<h4 id="生成公钥"><a href="#生成公钥" class="headerlink" title="生成公钥"></a>生成公钥</h4><p><code>openssl req -new -x509 -sha256 -key server.key -out server.pem -days 3650</code></p>
+<blockquote>
+<p>openssl req：生成自签名证书，-new指生成证书请求、-sha256指使用sha256加密、-key指定私钥文件、-x509指输出证书、-days 3650为有效期</p>
+</blockquote>
+<p>此后则输入证书拥有者信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Country Name (2 letter code) [AU]:CN</span><br><span class="line">State or Province Name (full name) [Some-State]:XxXx</span><br><span class="line">Locality Name (eg, city) []:XxXx</span><br><span class="line">Organization Name (eg, company) [Internet Widgits Pty Ltd]:XX Co. Ltd</span><br><span class="line">Organizational Unit Name (eg, section) []:Dev</span><br><span class="line">Common Name (e.g. server FQDN or YOUR name) []:go-grpc-example</span><br><span class="line">Email Address []:xxx@xxx.com</span><br></pre></td></tr></table></figure>
 
-    location /{
-        proxy_pass   http://localhost:52998;
+<h4 id="服务端构建TLS证书并认证"><a href="#服务端构建TLS证书并认证" class="headerlink" title="服务端构建TLS证书并认证"></a>服务端构建TLS证书并认证</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 监听本地端口</span></span><br><span class="line">	listener, err := net.Listen(Network, Address)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"net.Listen err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 从输入证书文件和密钥文件为服务端构造TLS凭证</span></span><br><span class="line">	creds, err := credentials.NewServerTLSFromFile(<span class="string">"../pkg/tls/server.pem"</span>, <span class="string">"../pkg/tls/server.key"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"Failed to generate credentials %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 新建gRPC服务器实例,并开启TLS认证</span></span><br><span class="line">	grpcServer := grpc.NewServer(grpc.Creds(creds))</span><br><span class="line">	<span class="comment">// 在gRPC服务器注册我们的服务</span></span><br><span class="line">	pb.RegisterSimpleServer(grpcServer, &amp;SimpleService&#123;&#125;)</span><br><span class="line">	log.Println(Address + <span class="string">" net.Listing whth TLS and token..."</span>)</span><br><span class="line">	<span class="comment">//用服务器 Serve() 方法以及我们的端口信息区实现阻塞等待，直到进程被杀死或者 Stop() 被调用</span></span><br><span class="line">	err = grpcServer.Serve(listener)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"grpcServer.Serve err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+<ul>
+<li><code>credentials.NewServerTLSFromFile</code>：从输入证书文件和密钥文件为服务端构造TLS凭证</li>
+<li><code>grpc.Creds</code>：返回一个ServerOption，用于设置服务器连接的凭证。</li>
+</ul>
+<p>完整<a href="https://github.com/Bingjian-Zhu/go-grpc-example/tree/master/7-grpc_security/server/server.go" target="_blank" rel="noopener">server.go</a>代码</p>
+<h4 id="客户端配置TLS连接"><a href="#客户端配置TLS连接" class="headerlink" title="客户端配置TLS连接"></a>客户端配置TLS连接</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> grpcClient pb.SimpleClient</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">//从输入的证书文件中为客户端构造TLS凭证</span></span><br><span class="line">	creds, err := credentials.NewClientTLSFromFile(<span class="string">"../pkg/tls/server.pem"</span>, <span class="string">"go-grpc-example"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"Failed to create TLS credentials %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 连接服务器</span></span><br><span class="line">	conn, err := grpc.Dial(Address, grpc.WithTransportCredentials(creds))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"net.Connect err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 建立gRPC连接</span></span><br><span class="line">	grpcClient = pb.NewSimpleClient(conn)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-    }</code></pre><p>}</p>
-<p>在本地的浏览器访问：<a href="http://localhost:52999/api/values" target="_blank" rel="noopener">http://localhost:52999/api/values</a> 就可以获取返回值了。</p>
-<hr>
-<h3 id="五、可能遇到的问题"><a href="#五、可能遇到的问题" class="headerlink" title="五、可能遇到的问题"></a>五、可能遇到的问题</h3><blockquote>
-<p>换成Release 模式后重新生成镜像遇到的问题：<br><img src="http://z-bj.xyz/docker/2019-8-28/18.png" alt><br>解决办法：</p>
-<p>1.重启Docker </p>
-<p>2.网络问题</p>
+<ul>
+<li><code>credentials.NewClientTLSFromFile</code>：从输入的证书文件中为客户端构造TLS凭证。</li>
+<li><code>grpc.WithTransportCredentials</code>：配置连接级别的安全凭证（例如，TLS/SSL），返回一个DialOption，用于连接服务器。</li>
+</ul>
+<p>完整<a href="https://github.com/Bingjian-Zhu/go-grpc-example/tree/master/7-grpc_security/client/client.go" target="_blank" rel="noopener">client.go</a>代码</p>
+<p>到这里，已经完成TLS证书认证了，gRPC传输不再是明文传输。此外，添加自定义的验证方法能使gRPC相对更安全。下面以Token认证为例，介绍gRPC如何添加自定义验证方法。</p>
+<h3 id="Token认证"><a href="#Token认证" class="headerlink" title="Token认证"></a>Token认证</h3><p>客户端发请求时，添加Token到上下文<code>context.Context</code>中，服务器接收到请求，先从上下文中获取Token验证，验证通过才进行下一步处理。</p>
+<h4 id="客户端请求添加Token到上下文中"><a href="#客户端请求添加Token到上下文中" class="headerlink" title="客户端请求添加Token到上下文中"></a>客户端请求添加Token到上下文中</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> PerRPCCredentials <span class="keyword">interface</span> &#123;</span><br><span class="line">    GetRequestMetadata(ctx context.Context, uri ...<span class="keyword">string</span>) (<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>, error)</span><br><span class="line">    RequireTransportSecurity() <span class="keyword">bool</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p> gRPC 中默认定义了 <code>PerRPCCredentials</code>，是提供用于自定义认证的接口，它的作用是将所需的安全认证信息添加到每个RPC方法的上下文中。其包含 2 个方法：</p>
+<ul>
+<li><code>GetRequestMetadata</code>：获取当前请求认证所需的元数据</li>
+<li><code>RequireTransportSecurity</code>：是否需要基于 TLS 认证进行安全传输</li>
+</ul>
+<p>接下来我们实现这两个方法</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Token token认证</span></span><br><span class="line"><span class="keyword">type</span> Token <span class="keyword">struct</span> &#123;</span><br><span class="line">	AppID     <span class="keyword">string</span></span><br><span class="line">	AppSecret <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// GetRequestMetadata 获取当前请求认证所需的元数据（metadata）</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *Token)</span> <span class="title">GetRequestMetadata</span><span class="params">(ctx context.Context, uri ...<span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>&#123;<span class="string">"app_id"</span>: t.AppID, <span class="string">"app_secret"</span>: t.AppSecret&#125;, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// RequireTransportSecurity 是否需要基于 TLS 认证进行安全传输</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *Token)</span> <span class="title">RequireTransportSecurity</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后再客户端中调用Dial时添加自定义验证方法进去</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//构建Token</span></span><br><span class="line">	token := auth.Token&#123;</span><br><span class="line">		AppID:     <span class="string">"grpc_token"</span>,</span><br><span class="line">		AppSecret: <span class="string">"123456"</span>,</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 连接服务器</span></span><br><span class="line">	conn, err := grpc.Dial(Address, grpc.WithTransportCredentials(creds), grpc.WithPerRPCCredentials(&amp;token))</span><br></pre></td></tr></table></figure>
+
+<p>完整<a href="https://github.com/Bingjian-Zhu/go-grpc-example/tree/master/7-grpc_security/client/client.go" target="_blank" rel="noopener">client.go</a>代码</p>
+<h4 id="服务端验证Token"><a href="#服务端验证Token" class="headerlink" title="服务端验证Token"></a>服务端验证Token</h4><p>首先需要从上下文中获取元数据，然后从元数据中解析Token进行验证</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Check 验证token</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Check</span><span class="params">(ctx context.Context)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="comment">//从上下文中获取元数据</span></span><br><span class="line">	md, ok := metadata.FromIncomingContext(ctx)</span><br><span class="line">	<span class="keyword">if</span> !ok &#123;</span><br><span class="line">		<span class="keyword">return</span> status.Errorf(codes.Unauthenticated, <span class="string">"获取Token失败"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		appID     <span class="keyword">string</span></span><br><span class="line">		appSecret <span class="keyword">string</span></span><br><span class="line">	)</span><br><span class="line">	<span class="keyword">if</span> value, ok := md[<span class="string">"app_id"</span>]; ok &#123;</span><br><span class="line">		appID = value[<span class="number">0</span>]</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> value, ok := md[<span class="string">"app_secret"</span>]; ok &#123;</span><br><span class="line">		appSecret = value[<span class="number">0</span>]</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> appID != <span class="string">"grpc_token"</span> || appSecret != <span class="string">"123456"</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> status.Errorf(codes.Unauthenticated, <span class="string">"Token无效: app_id=%s, app_secret=%s"</span>, appID, appSecret)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>metadata.FromIncomingContext</code>：从上下文中获取元数据</li>
+</ul>
+<p>完整<a href="https://github.com/Bingjian-Zhu/go-grpc-example/tree/master/7-grpc_security/server/server.go" target="_blank" rel="noopener">server.go</a>代码</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本篇介绍如何为gRPC添加TLS证书认证和自定义认证，从而让gRPC更安全。然而上面Token认证的代码中，服务端验证Token时，需要在每个方法前添加Token验证，这样比较麻烦。下篇将介绍如何使用gRPC拦截器，取消掉这个重复步骤。</p>
+<p>教程源码地址：<a href="https://github.com/Bingjian-Zhu/go-grpc-example" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/go-grpc-example</a></p>
+<p>参考：</p>
+<blockquote>
+<ul>
+<li><a href="https://www.jianshu.com/p/1fc7130eb2c2" target="_blank" rel="noopener">https://www.jianshu.com/p/1fc7130eb2c2</a></li>
+<li><a href="https://segmentfault.com/a/1190000007933303" target="_blank" rel="noopener">https://segmentfault.com/a/1190000007933303</a></li>
+<li><a href="https://eddycjy.com/posts/go/grpc/2018-10-07-grpc-tls/" target="_blank" rel="noopener">https://eddycjy.com/posts/go/grpc/2018-10-07-grpc-tls/</a></li>
+</ul>
 </blockquote>
 
       
@@ -294,11 +292,11 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">docker</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">.NET Core</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go gRPC</a>
         		</li>
       		
 		</ul>
@@ -354,7 +352,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/08/28/使用Docker部署NET-Core程序/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/16/Go-gRPC进阶-TLS认证-自定义方法认证（七）/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -368,18 +366,9 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/08/29/Docker镜像优化/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          Docker镜像优化
-        
-      </div>
-    </a>
   
-  
-    <a href="/2019/08/27/gin+vue的前后端分离开源项目/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">gin+vue的前后端分离开源项目</div>
+    <a href="/2020/04/15/Go-gRPC进阶-超时设置（六）/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Go gRPC进阶-超时设置（六）</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -406,7 +395,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#一、Docker简介"><span class="toc-number">1.</span> <span class="toc-text">一、Docker简介</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#（2）概念认知"><span class="toc-number">1.1.</span> <span class="toc-text">（2）概念认知</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二、制作Docker镜像"><span class="toc-number">2.</span> <span class="toc-text">二、制作Docker镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三、服务器上运行镜像"><span class="toc-number">3.</span> <span class="toc-text">三、服务器上运行镜像</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#四、Nginx配置反向代理"><span class="toc-number">4.</span> <span class="toc-text">四、Nginx配置反向代理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#五、可能遇到的问题"><span class="toc-number">5.</span> <span class="toc-text">五、可能遇到的问题</span></a></li></ol>
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TLS证书认证"><span class="toc-number">2.</span> <span class="toc-text">TLS证书认证</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#什么是TLS"><span class="toc-number">2.0.0.1.</span> <span class="toc-text">什么是TLS</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#TLS的作用"><span class="toc-number">2.0.0.2.</span> <span class="toc-text">TLS的作用</span></a></li></ol></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#生成私钥"><span class="toc-number">2.1.</span> <span class="toc-text">生成私钥</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#生成公钥"><span class="toc-number">2.2.</span> <span class="toc-text">生成公钥</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#服务端构建TLS证书并认证"><span class="toc-number">2.3.</span> <span class="toc-text">服务端构建TLS证书并认证</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#客户端配置TLS连接"><span class="toc-number">2.4.</span> <span class="toc-text">客户端配置TLS连接</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Token认证"><span class="toc-number">3.</span> <span class="toc-text">Token认证</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#客户端请求添加Token到上下文中"><span class="toc-number">3.1.</span> <span class="toc-text">客户端请求添加Token到上下文中</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#服务端验证Token"><span class="toc-number">3.2.</span> <span class="toc-text">服务端验证Token</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">4.</span> <span class="toc-text">总结</span></a></li></ol>
                     </div>
                 </span>
             </div>
@@ -431,7 +420,7 @@
 <script src="https://billts.site/js/gitment.js"></script>
 <script>
 var gitment = new Gitment({
-  id: 'Wed Aug 28 2019 23:15:01 GMT+0800',
+  id: 'Thu Apr 16 2020 08:54:34 GMT+0800',
   owner: 'Bingjian-Zhu',
   repo: 'Bingjian-Zhu.github.io',
   oauth: {

@@ -17,7 +17,7 @@
 <meta property="og:description" content="前言上一篇介绍了简单模式RPC，当数据量大或者需要不断传输数据时候，我们应该使用流式RPC，它允许我们边处理边传输数据。本篇先介绍服务端流式RPC。 服务端流式RPC：客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流，直到里面没有任何消息。">
 <meta property="og:locale" content="en">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202004/1508611-20200413200011972-285642192.png">
-<meta property="og:updated_time" content="2020-04-14T03:14:55.837Z">
+<meta property="og:updated_time" content="2020-04-15T00:57:29.024Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Go gRPC教程-服务端流式RPC（三）">
 <meta name="twitter:description" content="前言上一篇介绍了简单模式RPC，当数据量大或者需要不断传输数据时候，我们应该使用流式RPC，它允许我们边处理边传输数据。本篇先介绍服务端流式RPC。 服务端流式RPC：客户端发送请求到服务器，拿到一个流去读取返回的消息序列。 客户端读取返回的流，直到里面没有任何消息。">
@@ -380,6 +380,19 @@
         </div>
         
         
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#情景模拟：实时获取股票走势。"><span class="toc-number">1.0.0.1.</span> <span class="toc-text">情景模拟：实时获取股票走势。</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#新建proto文件"><span class="toc-number">2.</span> <span class="toc-text">新建proto文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建Server端"><span class="toc-number">3.</span> <span class="toc-text">创建Server端</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#创建Client端"><span class="toc-number">4.</span> <span class="toc-text">创建Client端</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#思考"><span class="toc-number">5.</span> <span class="toc-text">思考</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">6.</span> <span class="toc-text">总结</span></a></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
     </div>
 </aside>
 
@@ -511,7 +524,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
+                <a href="javascript:void(0)" class="js-tag color3">Go gRPC</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -519,19 +532,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Go gRPC</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Channel</a>
+                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">vue</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Channel</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -543,11 +552,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
+                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
               </li>
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">.NET</a>
               </li>
             
             <div class="clearfix"></div>
