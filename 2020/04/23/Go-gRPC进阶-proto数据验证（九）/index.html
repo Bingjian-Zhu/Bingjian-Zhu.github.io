@@ -16,7 +16,7 @@
 <meta property="og:site_name" content="烟花易冷的博客">
 <meta property="og:description" content="前言上篇介绍了go-grpc-middleware的grpc_zap、grpc_auth和grpc_recovery使用，本篇将介绍grpc_validator，它可以对gRPC数据的输入和输出进行验证。">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2020-04-23T07:33:27.958Z">
+<meta property="og:updated_time" content="2020-04-24T01:11:04.257Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Go gRPC进阶-proto数据验证（九）">
 <meta name="twitter:description" content="前言上篇介绍了go-grpc-middleware的grpc_zap、grpc_auth和grpc_recovery使用，本篇将介绍grpc_validator，它可以对gRPC数据的输入和输出进行验证。">
@@ -185,7 +185,7 @@
 <figure class="highlight protobuf"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">syntax = <span class="string">"proto3"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">package</span> proto;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">"github.com/mwitkow/go-proto-validators/validator.proto"</span>;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">InnerMessage</span> </span>&#123;</span><br><span class="line">  <span class="comment">// some_integer can only be in range (1, 100).</span></span><br><span class="line">  <span class="built_in">int32</span> some_integer = <span class="number">1</span> [(validator.field) = &#123;int_gt: <span class="number">0</span>, int_lt: <span class="number">100</span>&#125;];</span><br><span class="line">  <span class="comment">// some_float can only be in range (0;1).</span></span><br><span class="line">  <span class="built_in">double</span> some_float = <span class="number">2</span> [(validator.field) = &#123;float_gte: <span class="number">0</span>, float_lte: <span class="number">1</span>&#125;];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">message</span> <span class="title">OuterMessage</span> </span>&#123;</span><br><span class="line">  <span class="comment">// important_string must be a lowercase alpha-numeric of 5 to 30 characters (RE2 syntax).</span></span><br><span class="line">  <span class="built_in">string</span> important_string = <span class="number">1</span> [(validator.field) = &#123;regex: <span class="string">"^[a-z]&#123;2,5&#125;$"</span>&#125;];</span><br><span class="line">  <span class="comment">// proto3 doesn't have `required`, the `msg_exist` enforces presence of InnerMessage.</span></span><br><span class="line">  InnerMessage inner = <span class="number">2</span> [(validator.field) = &#123;msg_exists : <span class="literal">true</span>&#125;];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">service</span> <span class="title">Simple</span></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">rpc</span> Route (InnerMessage) <span class="keyword">returns</span> (OuterMessage)&#123;&#125;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>代码<code>import &quot;github.com/mwitkow/go-proto-validators/validator.proto&quot;</code>，文件<code>validator.proto</code>需要<code>import &quot;google/protobuf/descriptor.proto&quot;;</code>包，不然会报错。</p>
-<p><code>google/protobuf</code>地址：<a href="https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/descriptor.proto。" target="_blank" rel="noopener">https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/descriptor.proto。</a></p>
+<p><code>google/protobuf</code>地址：<a href="https://github.com/protocolbuffers/protobuf/tree/master/src/google/protobuf/descriptor.proto" target="_blank" rel="noopener">https://github.com/protocolbuffers/protobuf/tree/master/src/google/protobuf/descriptor.proto</a></p>
 <p>把<code>src</code>文件夹中的<code>protobuf</code>目录下载到GOPATH目录下。</p>
 <p>2.编译simple.proto文件</p>
 <p><code>go get github.com/mwitkow/go-proto-validators/protoc-gen-govalidators</code></p>
@@ -329,6 +329,15 @@
 
   
 <nav id="article-nav">
+  
+    <a href="/2020/04/26/Go-gRPC进阶-gRPC转换HTTP（十）/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          Go gRPC进阶-gRPC转换HTTP（十）
+        
+      </div>
+    </a>
   
   
     <a href="/2020/04/22/Go-gRPC进阶-go-grpc-middleware使用（八）/" id="article-nav-older" class="article-nav-link-wrap">
@@ -496,6 +505,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">gin</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
               </li>
              
@@ -504,19 +517,15 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">gin</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color4">vue</a>
+                <a href="javascript:void(0)" class="js-tag color3">Channel</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">Channel</a>
+                <a href="javascript:void(0)" class="js-tag color4">vue</a>
               </li>
              
               <li class="article-tag-list-item">
