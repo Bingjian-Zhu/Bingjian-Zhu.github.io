@@ -6,25 +6,15 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Docker镜像优化 | 烟花易冷的博客</title>
+  <title>Archives: 2020/5 | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前言 上篇博文说到使用Visual Studio Tools for Docker帮助我们生成Dockerfile，现在我们讨论下生成的Dockerfile的优劣。">
-<meta name="keywords" content="docker">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Docker镜像优化">
-<meta property="og:url" content="http://yoursite.com/2019/08/29/Docker镜像优化/index.html">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="烟花易冷的博客">
+<meta property="og:url" content="http://yoursite.com/archives/2020/05/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
-<meta property="og:description" content="前言 上篇博文说到使用Visual Studio Tools for Docker帮助我们生成Dockerfile，现在我们讨论下生成的Dockerfile的优劣。">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-29/1.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-29/2.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-29/3.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-29/4.png">
-<meta property="og:updated_time" content="2019-12-12T07:48:37.810Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Docker镜像优化">
-<meta name="twitter:description" content="前言 上篇博文说到使用Visual Studio Tools for Docker帮助我们生成Dockerfile，现在我们讨论下生成的Dockerfile的优劣。">
-<meta name="twitter:image" content="http://z-bj.xyz/docker/2019-8-29/1.png">
+<meta name="twitter:title" content="烟花易冷的博客">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -162,222 +152,44 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Docker镜像优化" class="article article-type-post " itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      Docker镜像优化
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2020" class="archive-year">2020</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2020/05/06/多阶段构建Golang程序Docker镜像/" class="archive-article-date">
+  	<time datetime="2020-05-06T13:02:58.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-06</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2020/05/06/多阶段构建Golang程序Docker镜像/">多阶段构建Golang程序Docker镜像</a>
     </h1>
   
 
-        
-        <a href="/2019/08/29/Docker镜像优化/" class="archive-article-date">
-  	<time datetime="2019-08-29T15:36:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-29</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><blockquote>
-<p><a href="https://bingjian-zhu.github.io/2019/08/28/%E4%BD%BF%E7%94%A8Docker%E9%83%A8%E7%BD%B2NET-Core%E7%A8%8B%E5%BA%8F/" target="_blank" rel="noopener">上篇博文</a>说到使用Visual Studio Tools for Docker帮助我们生成Dockerfile，现在我们讨论下生成的Dockerfile的优劣。</p>
-</blockquote>
-<a id="more"></a>
-
-<hr>
-<h3 id="一、以往Dockerfile构建模式"><a href="#一、以往Dockerfile构建模式" class="headerlink" title="一、以往Dockerfile构建模式"></a>一、以往Dockerfile构建模式</h3><p>（1）发布API项目<br>新建Web API项目，项目名称为API<br>在项目所在目录输入指令：<code>dotnet publish --runtime ubuntu.16.04-x64</code></p>
-<p>（2）创建镜像<br>在发布目录publish文件下新建Dockerfile文件，黏贴以下代码</p>
-<pre><code># 声明使用的基础镜像
-FROM microsoft/dotnet:2.1-sdk
-
-# 设置工作目录
-WORKDIR /app
-
-# 将本地应用拷贝到 容器/app 目录下
-COPY ./ ./
-
-# 设置导出端口
-EXPOSE 80
-
-# 指定应用入口点 API.dll代表的是主程序文件
-ENTRYPOINT [&quot;dotnet&quot;, &quot;API.dll&quot;]</code></pre><p>在Dockerfile所在的目录下输入指令生成镜像：<code>docker build -t api .</code><br> 不要忘记后面有一个点 .</p>
-<p> <img src="http://z-bj.xyz/docker/2019-8-29/1.png" alt></p>
-<p> 生成api:latest镜像成功</p>
-<blockquote>
-<p>参考博客操作步骤：<a href="https://www.cnblogs.com/bluesummer/p/8087326.html" target="_blank" rel="noopener">https://www.cnblogs.com/bluesummer/p/8087326.html</a></p>
-</blockquote>
-<p> （3）分析镜像<br> 我们来查看镜像信息，输入：<code>docker images</code><br>  <img src="http://z-bj.xyz/docker/2019-8-29/2.png" alt></p>
-<p>  发现api:latest镜像的大小为1.83GB，大得有点夸张。</p>
-<p><strong>现在我们来分析这个Dockerfile：</strong></p>
-<p><code>FROM microsoft/dotnet:2.1-sdk</code></p>
-<p><code>FROM</code>：指定所创建的基础镜像，如果本地不存在，则默认去Docker Hub下载指定镜像。任何Dockerfile中的第一条指令必须为FROM指令。并且，如果在同一个Dockerfile中创建多个镜像，可以使用多个FROM指令。</p>
-<p>文中Dockerfile基于microsoft/dotnet:2.1-sdk镜像，而图中可看到，microsoft/dotnet:2.1-sdk镜像大小已经达到1.73GB了，所以最后生成的api:latest镜像大小为1.83GB也不足为怪。</p>
-<p>那问题来了，我们应该采用哪个镜像作为基础镜像，来创建我们自己的镜像呢？</p>
-<blockquote>
-<p>查阅了微软官网文档说明：<br>microsoft/dotnet:<code>&lt;version&gt;</code>-sdk包含带有.NET Core 和命令行工具 (CLI) 的.NET Core SDK。此镜像将映射到开发方案，可使用此镜像进行本地开发、调试和单元测试。</p>
-<p>microsoft/dotnet:<code>&lt;version&gt;</code>-runtime包含.NET Core（runtime和库），并且针对在生产环境中运行.NET Core 应用进行了优化。</p>
-</blockquote>
-<p>我们修改Dockerfile的FROM指令为<code>FROM microsoft/dotnet:2.1-aspnetcore-runtime</code></p>
-<p>其他指令保持不变，新建一个api:1.0.0的镜像。<br>  <img src="http://z-bj.xyz/docker/2019-8-29/3.png" alt></p>
-<p>  可以看到，镜像大小瞬间小了很多。但是我们还不满足，因为原本microsoft/dotnet:2.1-aspnetcore-runtime镜像才253MB，而我们的镜像是353MB。</p>
-<p>   <code>WORKDIR /app</code></p>
-<p><code>WORKDIR</code>：为后续RUN、CMD和ENTRYPOINT指令设置工作目录。可以使用多个WORKDIR，后续命令如果参数是相对路径，则会基于之前命令指定路径。例如：</p>
-<blockquote>
-<p>WORKDIR /app<br>WORKDIR publish<br>WORKDIR api</p>
-<p>最终路径为：/app/publish/api</p>
-</blockquote>
-<p><code>COPY ./ ./</code></p>
-<p><code>COPY</code>：格式为COPY <code>&lt;src&gt; &lt;dest&gt;</code>。复制本地主机的<code>&lt;src&gt;</code>（为Dockerfile所在的目录的相对路径）下的内容到容器中的<code>&lt;dest&gt;</code>下。目标路径不存在，则自动创建。</p>
-<p><code>./ ./</code> 就是将本地Dockerfile所在的目录的文件和文件夹都复制到镜像中的/app目录下。</p>
-<blockquote>
-<p>注意区分以下两条指令：</p>
-</blockquote>
-<blockquote>
-<p>COPY test relativeDir/   # adds “test” to <code>WORKDIR</code>/relativeDir/</p>
-</blockquote>
-<blockquote>
-<p>COPY test /absoluteDir/  # adds “test” to /absoluteDir/</p>
-</blockquote>
-<p>想了下，这里应该是不合理的，把全部文件都复制过去，这肯定会造成镜像变大。<br>又想了下，这个已经是我们发布过的文件，那还能怎么办。问题先放这里，等会再解决。</p>
-<p><code>EXPOSE 80</code></p>
-<p><code>EXPOSE</code>：声明镜像内服务所监听的端口。</p>
-<p><code>ENTRYPOINT [&quot;dotnet&quot;, &quot;API.dll&quot;]</code></p>
-<p><code>ENTRYPOINT</code>：指定镜像的默认入口命令，该入口命令会在启动容器是作为跟命令执行，所有传入值作为该命令的参数。支持两种格式：</p>
-<blockquote>
-<p>ENTRYPOINT [“executable”,”param1”,”param2”] （exec调用执行）</p>
-</blockquote>
-<blockquote>
-<p>ENTRYPOINT command param1 param2 （shell中执行）</p>
-</blockquote>
-<p>每个Dockerfile里若出现多个ENTRYPOINT，只有放后面的那个ENTRYPOINT有效。</p>
-<blockquote>
-<p>Dockerfile参考：<a href="https://docs.docker.com/engine/reference/builder/#usage" target="_blank" rel="noopener">https://docs.docker.com/engine/reference/builder/#usage</a>  里面有各个指令的详细介绍。</p>
-</blockquote>
-<hr>
-<h3 id="二、multi-stage-builds（多阶段构建）"><a href="#二、multi-stage-builds（多阶段构建）" class="headerlink" title="二、multi-stage builds（多阶段构建）"></a>二、multi-stage builds（多阶段构建）</h3><p>在多阶段构建的过程中，我们在Dockerfile使用多个FROM指令，每个FROM指令使用不同的基础镜像构成了不同阶段。你可以选择从上一个阶段的产物（artifacts）复制到下一个阶段，从而确保不会把不需要的东西带到下一阶段。这种方法可以有效减小Docker镜像的大小。</p>
-<p>默认情况下，这些阶段没有被命名，可以通过它们的整数引用它们，第一个FROM指令从0开始。然而，我们也可以以<code>as &lt;NAME&gt;</code>的方式命名每个阶段。</p>
-<blockquote>
-<p>参考官网：<a href="https://docs.docker.com/develop/develop-images/multistage-build/" target="_blank" rel="noopener">https://docs.docker.com/develop/develop-images/multistage-build/</a></p>
-</blockquote>
-<p>以下我们用Visual Studio Tools for Docker生成的Dockerfile进行介绍。 </p>
-<pre><code>FROM microsoft/dotnet:2.1-aspnetcore-runtime AS base
-
-WORKDIR /app
-
-EXPOSE 80
-
-FROM microsoft/dotnet:2.1-sdk AS build
-
-WORKDIR /src
-
-COPY [&quot;API/API.csproj&quot;, &quot;API/&quot;]
-
-RUN dotnet restore &quot;API/API.csproj&quot;
-
-COPY . .
-
-WORKDIR &quot;/src/API&quot;
-
-RUN dotnet build &quot;API.csproj&quot; -c Release -o /app
-
-FROM build AS publish
-
-RUN dotnet publish &quot;API.csproj&quot; -c Release -o /app
-
-FROM base AS final
-
-WORKDIR /app
-
-COPY --from=publish /app .
-
-ENTRYPOINT [&quot;dotnet&quot;, &quot;API.dll&quot;]</code></pre><p>它分为四个阶段，分别是<code>base</code>、<code>build</code>、<code>publish</code>和<code>final</code>。</p>
-<p><strong><code>base</code></strong>阶段：上面已经分析了这里不再详述。</p>
-<p><strong><code>build</code></strong>阶段：</p>
-<p><code>FROM microsoft/dotnet:2.1-sdk AS build</code>以microsoft/dotnet:2.1-sdk为基础镜像</p>
-<p><code>WORKDIR /src</code>工作目录为/src</p>
-<p><code>COPY [&quot;API/API.csproj&quot;, &quot;API/&quot;]</code>把Dockerfile所在目录的API/API.csproj文件复制到容器的/src/API/中</p>
-<p><code>RUN dotnet restore &quot;API/API.csproj&quot;</code>在当前镜像的基础上执行<code>dotnet restore &quot;API/API.csproj&quot;</code>，把API项目的依赖项和工具还原，并输出结果。</p>
-<blockquote>
-<p><code>dotnet restore</code>这条命令是使用 NuGet 还原依赖项以及在 project 文件中指定项目特殊的工具执行对依赖项和工具的还原。</p>
-</blockquote>
-<p><code>COPY . .</code></p>
-<p><code>WORKDIR &quot;/src/API&quot;</code>切换工作目录到/src/API，可以用WORKDIR API替代，但明显第一种方法更直观。</p>
-<p><code>RUN dotnet build &quot;API.csproj&quot; -c Release -o /app</code>执行<code>dotnet build &quot;API.csproj&quot; -c Release -o /app</code>，以Release模式生成API项目及其所有依赖项并把生成的二进制文件输出到/app目录。</p>
-<p><strong><code>publish</code></strong>阶段：</p>
-<p><code>FROM build AS publish</code>以上一阶段build为基础镜像</p>
-<p><code>RUN dotnet publish &quot;API.csproj&quot; -c Release -o /app</code>执行<code>dotnet publish &quot;API.csproj&quot; -c Release -o /app</code>，以Release模式把API应用程序及其依赖项打包到/app目录以部署到托管系统。</p>
-<p><strong><code>final</code></strong>阶段:</p>
-<p><code>FROM base AS final</code>以上阶段base为基础镜像</p>
-<p><code>WORKDIR /app</code>以/app为工作目录</p>
-<p><code>COPY --from=publish /app .</code>把publish阶段生成的/app目录下的文件和文件夹复制到/app目录。</p>
-<p>这样做的原因是，上阶段的产物是不会带到下一阶段。</p>
-<blockquote>
-<p>现在可以解释为什么使用Visual Studio Tools for Docker不用发布也能生成可运行的镜像了，它实时 (JIT) 编译，提高启动性能。而且它只获取了程序运行所需要的文件放到镜像中。</p>
-</blockquote>
-<p>我们生成一个最新的镜像<br>  <img src="http://z-bj.xyz/docker/2019-8-29/4.png" alt></p>
-<p>  发现它和microsoft/dotnet:2.1-aspnetcore-runtime镜像一样大，这下满足了，毕竟我们没写什么代码到项目中。</p>
-<hr>
-<h3 id="三、优化Docker镜像的方向"><a href="#三、优化Docker镜像的方向" class="headerlink" title="三、优化Docker镜像的方向"></a>三、优化Docker镜像的方向</h3><blockquote>
-<p> 1.精简镜像用途，尽量让每个镜像的用途都比较集中、单一，避免构造大而复杂，功能多的镜像。</p>
-</blockquote>
-<blockquote>
-<p>2.选用合适的基础镜像。</p>
-</blockquote>
-<blockquote>
-<p>3.在Dockerfile中写上注释，方便维护和他人使用。</p>
-</blockquote>
-<blockquote>
-<p>4.正确使用版本号，如1.0.1。</p>
-</blockquote>
-<blockquote>
-<p>5.使用多阶段构建镜像。</p>
-</blockquote>
-
-      
-
-      
-        <div class="page-reward">
-          <a href="javascript:;" class="page-reward-btn tooltip-top">
-            <div class="tooltip tooltip-east">
-            <span class="tooltip-item">
-              赏
-            </span>
-            <span class="tooltip-content">
-              <span class="tooltip-text">
-                <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
-                  <div class="reward-box">
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://z-bj.xyz/pay/alipay.JPG">
-                      <span class="reward-type">支付宝</span>
-                    </div>
-                    
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://z-bj.xyz/pay/wechatpay.JPG">
-                      <span class="reward-type">微信</span>
-                    </div>
-                    
-                  </div>
-                </span>
-              </span>
-            </span>
-          </div>
-          </a>
-        </div>
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
+        <div class="article-info info-on-right">
+          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go</a>
+        		</li>
+      		 
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">docker</a>
         		</li>
@@ -385,144 +197,19 @@ ENTRYPOINT [&quot;dotnet&quot;, &quot;API.dll&quot;]</code></pre><p>它分为四
 		</ul>
 	</div>
 
-      
+          
 
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/08/29/Docker镜像优化/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
-  
-<nav id="article-nav">
-  
-    <a href="/2019/09/01/RabbitMQ教程（译）-Hello-World/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          RabbitMQ教程（译）-Hello World
-        
-      </div>
-    </a>
   
   
-    <a href="/2019/08/28/使用Docker部署NET-Core程序/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">使用Docker部署.NET Core程序</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-        <div class="toc-container tooltip-left">
-            <i class="icon-font icon-category"></i>
-            <div class="tooltip tooltip-east">
-                <span class="tooltip-item">
-                </span>
-                <span class="tooltip-content">
-                    <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#一、以往Dockerfile构建模式"><span class="toc-number"></span> <span class="toc-text">一、以往Dockerfile构建模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#二、multi-stage-builds（多阶段构建）"><span class="toc-number"></span> <span class="toc-text">二、multi-stage builds（多阶段构建）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#三、优化Docker镜像的方向"><span class="toc-number"></span> <span class="toc-text">三、优化Docker镜像的方向</span></a>
-                    </div>
-                </span>
-            </div>
-        </div>
-        
-    </div>
-</aside>
-
-
-
-  
-  
+    </div></section>
   
 
-  
-
-  
-
-  
-  <div id="gitment-ctn"></div> 
-<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
-<script src="https://billts.site/js/gitment.js"></script>
-<script>
-var gitment = new Gitment({
-  id: 'Thu Aug 29 2019 23:36:09 GMT+0800',
-  owner: 'Bingjian-Zhu',
-  repo: 'Bingjian-Zhu.github.io',
-  oauth: {
-    client_id: 'ea0e7d1f85b69731c83e',
-    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
-  },
-})
-gitment.render('gitment-ctn')
-</script>
-  
+    
 
 
           </div>
@@ -550,8 +237,8 @@ gitment.render('gitment-ctn')
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
-		isArchive: false,
+		isPost: false,
+		isArchive: true,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
