@@ -171,53 +171,35 @@
     
   
     
-      
-    
-      
-    
-      
-    
-      
-    
-      
-    
-      
-    
-      
-    
-      
-    
-      
   
-    <article id="post-gin+vue的前后端分离开源项目" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  
+    <article id="post-gin-jwt对API进行权限控制" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/27/gin+vue的前后端分离开源项目/">gin+vue的前后端分离开源项目</a>
+      <a class="article-title" href="/2019/09/03/gin-jwt对API进行权限控制/">gin-jwt对API进行权限控制</a>
     </h1>
   
 
+        
+        <a href="/2019/09/03/gin-jwt对API进行权限控制/" class="archive-article-date">
+  	<time datetime="2019-09-03T13:18:49.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-03</time>
+</a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <hr>
-<p><img src="http://z-bj.xyz/gin/2019-8-27/1.gif" alt></p>
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>之前文章简单介绍了如何运行<a href="https://bingjian-zhu.github.io/2019/08/27/gin+vue%E7%9A%84%E5%89%8D%E5%90%8E%E7%AB%AF%E5%88%86%E7%A6%BB%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE/" target="_blank" rel="noopener">gin+vue的前后端分离开源项目</a>，该项目是学习了<a href="https://github.com/EDDYCJY/go-gin-example/blob/master/README_ZH.md" target="_blank" rel="noopener">Gin实践教程</a>后结合vue-element-admin写的，该教程讲得很详细，适合入门Gin。本篇文章将介绍gin+vue的前后端分离开源项目中如何使用gin-jwt对API进行权限验证。</p>
         
       
 
       
     </div>
     <div class="article-info article-info-index">
-      
-        <div class="article-pop-out tagcloud">
-          <i class="icon-tuding"></i>
-          <a class="article-tag-list-link color3">置顶</a>
-        </div>
       
       
 	<div class="article-tag tagcloud">
@@ -231,10 +213,6 @@
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">gin</a>
         		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">vue</a>
-        		</li>
       		
 		</ul>
 	</div>
@@ -243,7 +221,7 @@
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/27/gin+vue的前后端分离开源项目/">展开全文 >></a>
+          <a class="article-more-a" href="/2019/09/03/gin-jwt对API进行权限控制/">展开全文 >></a>
         </p>
       
 
@@ -949,7 +927,7 @@
   
   
     <nav id="page-nav">
-      <a class="extend prev" rel="prev" href="/page/2/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
+      <a class="extend prev" rel="prev" href="/page/2/">&laquo; Prev</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/">Next &raquo;</a>
     </nav>
   
 
@@ -1053,15 +1031,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
-              </li>
-             
-              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">gin</a>
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color2">docker</a>
+                <a href="javascript:void(0)" class="js-tag color1">Go Modules</a>
               </li>
              
               <li class="article-tag-list-item">
@@ -1081,6 +1055,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">docker</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">.NET Core</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">goroutine</a>
               </li>
              
@@ -1089,7 +1071,7 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
               </li>
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">.NET Core</a>
+                <a href="javascript:void(0)" class="js-tag color5">etcd</a>
               </li>
             
             <div class="clearfix"></div>

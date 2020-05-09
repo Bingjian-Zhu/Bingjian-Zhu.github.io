@@ -6,20 +6,15 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Go gRPC进阶-TLS认证+自定义方法认证（七） | 烟花易冷的博客</title>
+  <title>Tag: etcd | 烟花易冷的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="前言前面篇章的gRPC都是明文传输的，容易被篡改数据。本章将介绍如何为gRPC添加安全机制，包括TLS证书认证和Token认证。">
-<meta name="keywords" content="Go,Go gRPC">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Go gRPC进阶-TLS认证+自定义方法认证（七）">
-<meta property="og:url" content="http://yoursite.com/2020/04/16/Go-gRPC进阶-TLS认证-自定义方法认证（七）/index.html">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="烟花易冷的博客">
+<meta property="og:url" content="http://yoursite.com/tags/etcd/index.html">
 <meta property="og:site_name" content="烟花易冷的博客">
-<meta property="og:description" content="前言前面篇章的gRPC都是明文传输的，容易被篡改数据。本章将介绍如何为gRPC添加安全机制，包括TLS证书认证和Token认证。">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2020-04-16T03:47:22.692Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Go gRPC进阶-TLS认证+自定义方法认证（七）">
-<meta name="twitter:description" content="前言前面篇章的gRPC都是明文传输的，容易被篡改数据。本章将介绍如何为gRPC添加安全机制，包括TLS证书认证和Token认证。">
+<meta name="twitter:title" content="烟花易冷的博客">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -157,147 +152,36 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Go-gRPC进阶-TLS认证-自定义方法认证（七）" class="article article-type-post " itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      Go gRPC进阶-TLS认证+自定义方法认证（七）
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2020" class="archive-year">2020</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2020/05/09/etcd环境安装与使用/" class="archive-article-date">
+  	<time datetime="2020-05-09T08:27:36.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-09</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2020/05/09/etcd环境安装与使用/">etcd环境安装与使用</a>
     </h1>
   
 
-        
-        <a href="/2020/04/16/Go-gRPC进阶-TLS认证-自定义方法认证（七）/" class="archive-article-date">
-  	<time datetime="2020-04-16T00:54:34.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-16</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>前面篇章的gRPC都是明文传输的，容易被篡改数据。本章将介绍如何为gRPC添加安全机制，包括TLS证书认证和Token认证。</p>
-<a id="more"></a>
-<h3 id="TLS证书认证"><a href="#TLS证书认证" class="headerlink" title="TLS证书认证"></a>TLS证书认证</h3><h6 id="什么是TLS"><a href="#什么是TLS" class="headerlink" title="什么是TLS"></a>什么是TLS</h6><p>TLS（Transport Layer Security，安全传输层)，TLS是建立在<code>传输层</code>TCP协议之上的协议，服务于应用层，它的前身是SSL（Secure Socket Layer，安全套接字层），它实现了将应用层的报文进行加密后再交由TCP进行传输的功能。</p>
-<h6 id="TLS的作用"><a href="#TLS的作用" class="headerlink" title="TLS的作用"></a>TLS的作用</h6><p>TLS协议主要解决如下三个网络安全问题。</p>
-<ul>
-<li>保密(message privacy)，保密通过加密encryption实现，所有信息都加密传输，第三方无法嗅探；</li>
-<li>完整性(message integrity)，通过MAC校验机制，一旦被篡改，通信双方会立刻发现；</li>
-<li>认证(mutual authentication)，双方认证,双方都可以配备证书，防止身份被冒充；</li>
-</ul>
-<h4 id="生成私钥"><a href="#生成私钥" class="headerlink" title="生成私钥"></a>生成私钥</h4><p>生成RSA私钥：<code>openssl genrsa -out server.key 2048</code></p>
-<blockquote>
-<p>生成RSA私钥，命令的最后一个参数，将指定生成密钥的位数，如果没有指定，默认512</p>
-</blockquote>
-<p>生成ECC私钥：<code>openssl ecparam -genkey -name secp384r1 -out server.key</code></p>
-<blockquote>
-<p>生成ECC私钥，命令为椭圆曲线密钥参数生成及操作，本文中ECC曲线选择的是secp384r1</p>
-</blockquote>
-<h4 id="生成公钥"><a href="#生成公钥" class="headerlink" title="生成公钥"></a>生成公钥</h4><p><code>openssl req -new -x509 -sha256 -key server.key -out server.pem -days 3650</code></p>
-<blockquote>
-<p>openssl req：生成自签名证书，-new指生成证书请求、-sha256指使用sha256加密、-key指定私钥文件、-x509指输出证书、-days 3650为有效期</p>
-</blockquote>
-<p>此后则输入证书拥有者信息</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Country Name (2 letter code) [AU]:CN</span><br><span class="line">State or Province Name (full name) [Some-State]:XxXx</span><br><span class="line">Locality Name (eg, city) []:XxXx</span><br><span class="line">Organization Name (eg, company) [Internet Widgits Pty Ltd]:XX Co. Ltd</span><br><span class="line">Organizational Unit Name (eg, section) []:Dev</span><br><span class="line">Common Name (e.g. server FQDN or YOUR name) []:go-grpc-example</span><br><span class="line">Email Address []:xxx@xxx.com</span><br></pre></td></tr></table></figure>
-
-<h4 id="服务端构建TLS证书并认证"><a href="#服务端构建TLS证书并认证" class="headerlink" title="服务端构建TLS证书并认证"></a>服务端构建TLS证书并认证</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 监听本地端口</span></span><br><span class="line">	listener, err := net.Listen(Network, Address)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"net.Listen err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 从输入证书文件和密钥文件为服务端构造TLS凭证</span></span><br><span class="line">	creds, err := credentials.NewServerTLSFromFile(<span class="string">"../pkg/tls/server.pem"</span>, <span class="string">"../pkg/tls/server.key"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"Failed to generate credentials %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 新建gRPC服务器实例,并开启TLS认证</span></span><br><span class="line">	grpcServer := grpc.NewServer(grpc.Creds(creds))</span><br><span class="line">	<span class="comment">// 在gRPC服务器注册我们的服务</span></span><br><span class="line">	pb.RegisterSimpleServer(grpcServer, &amp;SimpleService&#123;&#125;)</span><br><span class="line">	log.Println(Address + <span class="string">" net.Listing whth TLS and token..."</span>)</span><br><span class="line">	<span class="comment">//用服务器 Serve() 方法以及我们的端口信息区实现阻塞等待，直到进程被杀死或者 Stop() 被调用</span></span><br><span class="line">	err = grpcServer.Serve(listener)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"grpcServer.Serve err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><code>credentials.NewServerTLSFromFile</code>：从输入证书文件和密钥文件为服务端构造TLS凭证</li>
-<li><code>grpc.Creds</code>：返回一个ServerOption，用于设置服务器连接的凭证。</li>
-</ul>
-<p>完整<a href="https://github.com/Bingjian-Zhu/go-grpc-example/tree/master/7-grpc_security/server/server.go" target="_blank" rel="noopener">server.go</a>代码</p>
-<h4 id="客户端配置TLS连接"><a href="#客户端配置TLS连接" class="headerlink" title="客户端配置TLS连接"></a>客户端配置TLS连接</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> grpcClient pb.SimpleClient</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">//从输入的证书文件中为客户端构造TLS凭证</span></span><br><span class="line">	creds, err := credentials.NewClientTLSFromFile(<span class="string">"../pkg/tls/server.pem"</span>, <span class="string">"go-grpc-example"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"Failed to create TLS credentials %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 连接服务器</span></span><br><span class="line">	conn, err := grpc.Dial(Address, grpc.WithTransportCredentials(creds))</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"net.Connect err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">defer</span> conn.Close()</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 建立gRPC连接</span></span><br><span class="line">	grpcClient = pb.NewSimpleClient(conn)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><code>credentials.NewClientTLSFromFile</code>：从输入的证书文件中为客户端构造TLS凭证。</li>
-<li><code>grpc.WithTransportCredentials</code>：配置连接级别的安全凭证（例如，TLS/SSL），返回一个DialOption，用于连接服务器。</li>
-</ul>
-<p>完整<a href="https://github.com/Bingjian-Zhu/go-grpc-example/tree/master/7-grpc_security/client/client.go" target="_blank" rel="noopener">client.go</a>代码</p>
-<p>到这里，已经完成TLS证书认证了，gRPC传输不再是明文传输。此外，添加自定义的验证方法能使gRPC相对更安全。下面以Token认证为例，介绍gRPC如何添加自定义验证方法。</p>
-<h3 id="Token认证"><a href="#Token认证" class="headerlink" title="Token认证"></a>Token认证</h3><p>客户端发请求时，添加Token到上下文<code>context.Context</code>中，服务器接收到请求，先从上下文中获取Token验证，验证通过才进行下一步处理。</p>
-<h4 id="客户端请求添加Token到上下文中"><a href="#客户端请求添加Token到上下文中" class="headerlink" title="客户端请求添加Token到上下文中"></a>客户端请求添加Token到上下文中</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> PerRPCCredentials <span class="keyword">interface</span> &#123;</span><br><span class="line">    GetRequestMetadata(ctx context.Context, uri ...<span class="keyword">string</span>) (<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>, error)</span><br><span class="line">    RequireTransportSecurity() <span class="keyword">bool</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p> gRPC 中默认定义了 <code>PerRPCCredentials</code>，是提供用于自定义认证的接口，它的作用是将所需的安全认证信息添加到每个RPC方法的上下文中。其包含 2 个方法：</p>
-<ul>
-<li><code>GetRequestMetadata</code>：获取当前请求认证所需的元数据</li>
-<li><code>RequireTransportSecurity</code>：是否需要基于 TLS 认证进行安全传输</li>
-</ul>
-<p>接下来我们实现这两个方法</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Token token认证</span></span><br><span class="line"><span class="keyword">type</span> Token <span class="keyword">struct</span> &#123;</span><br><span class="line">	AppID     <span class="keyword">string</span></span><br><span class="line">	AppSecret <span class="keyword">string</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// GetRequestMetadata 获取当前请求认证所需的元数据（metadata）</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *Token)</span> <span class="title">GetRequestMetadata</span><span class="params">(ctx context.Context, uri ...<span class="keyword">string</span>)</span> <span class="params">(<span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>, error)</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">map</span>[<span class="keyword">string</span>]<span class="keyword">string</span>&#123;<span class="string">"app_id"</span>: t.AppID, <span class="string">"app_secret"</span>: t.AppSecret&#125;, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// RequireTransportSecurity 是否需要基于 TLS 认证进行安全传输</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(t *Token)</span> <span class="title">RequireTransportSecurity</span><span class="params">()</span> <span class="title">bool</span></span> &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>然后再客户端中调用Dial时添加自定义验证方法进去</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//构建Token</span></span><br><span class="line">	token := auth.Token&#123;</span><br><span class="line">		AppID:     <span class="string">"grpc_token"</span>,</span><br><span class="line">		AppSecret: <span class="string">"123456"</span>,</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 连接服务器</span></span><br><span class="line">	conn, err := grpc.Dial(Address, grpc.WithTransportCredentials(creds), grpc.WithPerRPCCredentials(&amp;token))</span><br></pre></td></tr></table></figure>
-
-<p>完整<a href="https://github.com/Bingjian-Zhu/go-grpc-example/tree/master/7-grpc_security/client/client.go" target="_blank" rel="noopener">client.go</a>代码</p>
-<h4 id="服务端验证Token"><a href="#服务端验证Token" class="headerlink" title="服务端验证Token"></a>服务端验证Token</h4><p>首先需要从上下文中获取元数据，然后从元数据中解析Token进行验证</p>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Check 验证token</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Check</span><span class="params">(ctx context.Context)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">	<span class="comment">//从上下文中获取元数据</span></span><br><span class="line">	md, ok := metadata.FromIncomingContext(ctx)</span><br><span class="line">	<span class="keyword">if</span> !ok &#123;</span><br><span class="line">		<span class="keyword">return</span> status.Errorf(codes.Unauthenticated, <span class="string">"获取Token失败"</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">var</span> (</span><br><span class="line">		appID     <span class="keyword">string</span></span><br><span class="line">		appSecret <span class="keyword">string</span></span><br><span class="line">	)</span><br><span class="line">	<span class="keyword">if</span> value, ok := md[<span class="string">"app_id"</span>]; ok &#123;</span><br><span class="line">		appID = value[<span class="number">0</span>]</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> value, ok := md[<span class="string">"app_secret"</span>]; ok &#123;</span><br><span class="line">		appSecret = value[<span class="number">0</span>]</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> appID != <span class="string">"grpc_token"</span> || appSecret != <span class="string">"123456"</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> status.Errorf(codes.Unauthenticated, <span class="string">"Token无效: app_id=%s, app_secret=%s"</span>, appID, appSecret)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Route 实现Route方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *SimpleService)</span> <span class="title">Route</span><span class="params">(ctx context.Context, req *pb.SimpleRequest)</span> <span class="params">(*pb.SimpleResponse, error)</span></span> &#123;</span><br><span class="line">    <span class="comment">//检测Token是否有效</span></span><br><span class="line">	<span class="keyword">if</span> err := Check(ctx); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line">	res := pb.SimpleResponse&#123;</span><br><span class="line">		Code:  <span class="number">200</span>,</span><br><span class="line">		Value: <span class="string">"hello "</span> + req.Data,</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> &amp;res, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><code>metadata.FromIncomingContext</code>：从上下文中获取元数据</li>
-</ul>
-<p>完整<a href="https://github.com/Bingjian-Zhu/go-grpc-example/tree/master/7-grpc_security/server/server.go" target="_blank" rel="noopener">server.go</a>代码</p>
-<p>服务端代码中，每个服务的方法都需要添加Check(ctx)来验证Token，这样十分麻烦。gRPC拦截器，能很好地解决这个问题。gRPC拦截器功能类似中间件，拦截器收到请求后，先进行一些操作，然后才进入服务的代码处理。</p>
-<h3 id="服务端添加拦截器"><a href="#服务端添加拦截器" class="headerlink" title="服务端添加拦截器"></a>服务端添加拦截器</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 监听本地端口</span></span><br><span class="line">	listener, err := net.Listen(Network, Address)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"net.Listen err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 从输入证书文件和密钥文件为服务端构造TLS凭证</span></span><br><span class="line">	creds, err := credentials.NewServerTLSFromFile(<span class="string">"../pkg/tls/server.pem"</span>, <span class="string">"../pkg/tls/server.key"</span>)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"Failed to generate credentials %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//普通方法：一元拦截器（grpc.UnaryInterceptor）</span></span><br><span class="line">	<span class="keyword">var</span> interceptor grpc.UnaryServerInterceptor</span><br><span class="line">	interceptor = <span class="function"><span class="keyword">func</span><span class="params">(ctx context.Context, req <span class="keyword">interface</span>&#123;&#125;, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler)</span> <span class="params">(resp <span class="keyword">interface</span>&#123;&#125;, err error)</span></span> &#123;</span><br><span class="line">		<span class="comment">//拦截普通方法请求，验证Token</span></span><br><span class="line">		err = Check(ctx)</span><br><span class="line">		<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 继续处理请求</span></span><br><span class="line">		<span class="keyword">return</span> handler(ctx, req)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 新建gRPC服务器实例,并开启TLS认证和Token认证</span></span><br><span class="line">	grpcServer := grpc.NewServer(grpc.Creds(creds), grpc.UnaryInterceptor(interceptor))</span><br><span class="line">	<span class="comment">// 在gRPC服务器注册我们的服务</span></span><br><span class="line">	pb.RegisterSimpleServer(grpcServer, &amp;SimpleService&#123;&#125;)</span><br><span class="line">	log.Println(Address + <span class="string">" net.Listing whth TLS and token..."</span>)</span><br><span class="line">	<span class="comment">//用服务器 Serve() 方法以及我们的端口信息区实现阻塞等待，直到进程被杀死或者 Stop() 被调用</span></span><br><span class="line">	err = grpcServer.Serve(listener)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		log.Fatalf(<span class="string">"grpcServer.Serve err: %v"</span>, err)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><code>grpc.UnaryServerInterceptor</code>：为一元拦截器，只会拦截简单RPC方法。流式RPC方法需要使用流式拦截器<code>grpc.StreamInterceptor</code>进行拦截。</li>
-</ul>
-<p>客户端发起请求，当Token不正确时候，会返回</p>
-<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Call Route err: rpc error: code = Unauthenticated desc = Token无效: app_id=grpc_token, app_secret=<span class="number">12345</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本篇介绍如何为gRPC添加TLS证书认证和自定义认证，从而让gRPC更安全。添加gRPC拦截器，从而省略在每个方法前添加Token检测代码，使代码更简洁。</p>
-<p>教程源码地址：<a href="https://github.com/Bingjian-Zhu/go-grpc-example" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/go-grpc-example</a></p>
-<p>参考：</p>
-<blockquote>
-<ul>
-<li><a href="https://www.jianshu.com/p/1fc7130eb2c2" target="_blank" rel="noopener">https://www.jianshu.com/p/1fc7130eb2c2</a></li>
-<li><a href="https://segmentfault.com/a/1190000007933303" target="_blank" rel="noopener">https://segmentfault.com/a/1190000007933303</a></li>
-<li><a href="https://eddycjy.com/posts/go/grpc/2018-10-07-grpc-tls/" target="_blank" rel="noopener">https://eddycjy.com/posts/go/grpc/2018-10-07-grpc-tls/</a></li>
-<li><a href="https://segmentfault.com/a/1190000007997759" target="_blank" rel="noopener">https://segmentfault.com/a/1190000007997759</a></li>
-<li><a href="https://eddycjy.com/posts/go/grpc/2018-10-10-interceptor/" target="_blank" rel="noopener">https://eddycjy.com/posts/go/grpc/2018-10-10-interceptor/</a></li>
-</ul>
-</blockquote>
-
-      
-
-      
-        <div class="page-reward">
-          <a href="javascript:;" class="page-reward-btn tooltip-top">
-            <div class="tooltip tooltip-east">
-            <span class="tooltip-item">
-              赏
-            </span>
-            <span class="tooltip-content">
-              <span class="tooltip-text">
-                <span class="tooltip-inner">
-                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
-                  <div class="reward-box">
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://z-bj.xyz/pay/alipay.JPG">
-                      <span class="reward-type">支付宝</span>
-                    </div>
-                    
-                    
-                    <div class="reward-box-item">
-                      <img class="reward-img" src="http://z-bj.xyz/pay/wechatpay.JPG">
-                      <span class="reward-type">微信</span>
-                    </div>
-                    
-                  </div>
-                </span>
-              </span>
-            </span>
-          </div>
-          </a>
-        </div>
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
+        <div class="article-info info-on-right">
+          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -307,150 +191,25 @@
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Go gRPC</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">etcd</a>
         		</li>
       		
 		</ul>
 	</div>
 
-      
+          
 
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/16/Go-gRPC进阶-TLS认证-自定义方法认证（七）/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
-  
-<nav id="article-nav">
-  
-    <a href="/2020/04/22/Go-gRPC进阶-go-grpc-middleware使用（八）/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          Go gRPC进阶-go-grpc-middleware使用（八）
-        
-      </div>
-    </a>
   
   
-    <a href="/2020/04/15/Go-gRPC进阶-超时设置（六）/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Go gRPC进阶-超时设置（六）</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-        <div class="toc-container tooltip-left">
-            <i class="icon-font icon-category"></i>
-            <div class="tooltip tooltip-east">
-                <span class="tooltip-item">
-                </span>
-                <span class="tooltip-content">
-                    <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TLS证书认证"><span class="toc-number">2.</span> <span class="toc-text">TLS证书认证</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#什么是TLS"><span class="toc-number">2.0.0.1.</span> <span class="toc-text">什么是TLS</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#TLS的作用"><span class="toc-number">2.0.0.2.</span> <span class="toc-text">TLS的作用</span></a></li></ol></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#生成私钥"><span class="toc-number">2.1.</span> <span class="toc-text">生成私钥</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#生成公钥"><span class="toc-number">2.2.</span> <span class="toc-text">生成公钥</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#服务端构建TLS证书并认证"><span class="toc-number">2.3.</span> <span class="toc-text">服务端构建TLS证书并认证</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#客户端配置TLS连接"><span class="toc-number">2.4.</span> <span class="toc-text">客户端配置TLS连接</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Token认证"><span class="toc-number">3.</span> <span class="toc-text">Token认证</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#客户端请求添加Token到上下文中"><span class="toc-number">3.1.</span> <span class="toc-text">客户端请求添加Token到上下文中</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#服务端验证Token"><span class="toc-number">3.2.</span> <span class="toc-text">服务端验证Token</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#服务端添加拦截器"><span class="toc-number">4.</span> <span class="toc-text">服务端添加拦截器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol>
-                    </div>
-                </span>
-            </div>
-        </div>
-        
-    </div>
-</aside>
-
-
-
-  
-  
+    </div></section>
   
 
-  
-
-  
-
-  
-  <div id="gitment-ctn"></div> 
-<link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
-<script src="https://billts.site/js/gitment.js"></script>
-<script>
-var gitment = new Gitment({
-  id: 'Thu Apr 16 2020 08:54:34 GMT+0800',
-  owner: 'Bingjian-Zhu',
-  repo: 'Bingjian-Zhu.github.io',
-  oauth: {
-    client_id: 'ea0e7d1f85b69731c83e',
-    client_secret: '1f85bd42e2c0352e67c91ca7dfd2db3a8a33d4aa',
-  },
-})
-gitment.render('gitment-ctn')
-</script>
-  
+    
 
 
           </div>
@@ -478,9 +237,9 @@ gitment.render('gitment-ctn')
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
+		isPost: false,
 		isArchive: false,
-		isTag: false,
+		isTag: true,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
