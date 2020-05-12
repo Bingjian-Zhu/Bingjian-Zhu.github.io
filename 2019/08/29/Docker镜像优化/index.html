@@ -16,15 +16,15 @@
 <meta property="og:site_name" content="烟花易冷的博客">
 <meta property="og:description" content="前言 上篇博文说到使用Visual Studio Tools for Docker帮助我们生成Dockerfile，现在我们讨论下生成的Dockerfile的优劣。">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-29/1.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-29/2.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-29/3.png">
-<meta property="og:image" content="http://z-bj.xyz/docker/2019-8-29/4.png">
-<meta property="og:updated_time" content="2019-12-12T07:48:37.810Z">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512093312557-1381310610.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512093335270-1267463860.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512093356978-557259396.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512093419945-1046546525.png">
+<meta property="og:updated_time" content="2020-05-12T01:34:45.043Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Docker镜像优化">
 <meta name="twitter:description" content="前言 上篇博文说到使用Visual Studio Tools for Docker帮助我们生成Dockerfile，现在我们讨论下生成的Dockerfile的优劣。">
-<meta name="twitter:image" content="http://z-bj.xyz/docker/2019-8-29/1.png">
+<meta name="twitter:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512093312557-1381310610.png">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -53,7 +53,7 @@
 <div class="intrude-less">
 	<header id="header" class="inner">
 		<a href="/" class="profilepic">
-			<img src="http://z-bj.xyz/avatar.png" class="js-avatar">
+			<img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512091351305-571849635.png" class="js-avatar">
 		</a>
 		<hgroup>
 		  <h1 class="header-author"><a href="/">烟花易冷</a></h1>
@@ -111,7 +111,7 @@
 	<div class="intrude-less">
 		<header id="header" class="inner">
 			<div class="profilepic">
-				<img src="http://z-bj.xyz/avatar.png" class="js-avatar">
+				<img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512091351305-571849635.png" class="js-avatar">
 			</div>
 			<hgroup>
 			  <h1 class="header-author js-header-author">烟花易冷</h1>
@@ -204,12 +204,12 @@ EXPOSE 80
 
 # 指定应用入口点 API.dll代表的是主程序文件
 ENTRYPOINT [&quot;dotnet&quot;, &quot;API.dll&quot;]</code></pre><p>在Dockerfile所在的目录下输入指令生成镜像：<code>docker build -t api .</code><br> 不要忘记后面有一个点 .</p>
-<p> <img src="http://z-bj.xyz/docker/2019-8-29/1.png" alt></p>
+<p> <img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512093312557-1381310610.png" alt></p>
 <p> 生成api:latest镜像成功</p>
 <blockquote>
 <p>参考博客操作步骤：<a href="https://www.cnblogs.com/bluesummer/p/8087326.html" target="_blank" rel="noopener">https://www.cnblogs.com/bluesummer/p/8087326.html</a></p>
 </blockquote>
-<p> （3）分析镜像<br> 我们来查看镜像信息，输入：<code>docker images</code><br>  <img src="http://z-bj.xyz/docker/2019-8-29/2.png" alt></p>
+<p> （3）分析镜像<br> 我们来查看镜像信息，输入：<code>docker images</code><br>  <img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512093335270-1267463860.png" alt></p>
 <p>  发现api:latest镜像的大小为1.83GB，大得有点夸张。</p>
 <p><strong>现在我们来分析这个Dockerfile：</strong></p>
 <p><code>FROM microsoft/dotnet:2.1-sdk</code></p>
@@ -221,7 +221,7 @@ ENTRYPOINT [&quot;dotnet&quot;, &quot;API.dll&quot;]</code></pre><p>在Dockerfil
 <p>microsoft/dotnet:<code>&lt;version&gt;</code>-runtime包含.NET Core（runtime和库），并且针对在生产环境中运行.NET Core 应用进行了优化。</p>
 </blockquote>
 <p>我们修改Dockerfile的FROM指令为<code>FROM microsoft/dotnet:2.1-aspnetcore-runtime</code></p>
-<p>其他指令保持不变，新建一个api:1.0.0的镜像。<br>  <img src="http://z-bj.xyz/docker/2019-8-29/3.png" alt></p>
+<p>其他指令保持不变，新建一个api:1.0.0的镜像。<br>  <img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512093356978-557259396.png" alt></p>
 <p>  可以看到，镜像大小瞬间小了很多。但是我们还不满足，因为原本microsoft/dotnet:2.1-aspnetcore-runtime镜像才253MB，而我们的镜像是353MB。</p>
 <p>   <code>WORKDIR /app</code></p>
 <p><code>WORKDIR</code>：为后续RUN、CMD和ENTRYPOINT指令设置工作目录。可以使用多个WORKDIR，后续命令如果参数是相对路径，则会基于之前命令指定路径。例如：</p>
@@ -317,7 +317,7 @@ ENTRYPOINT [&quot;dotnet&quot;, &quot;API.dll&quot;]</code></pre><p>它分为四
 <blockquote>
 <p>现在可以解释为什么使用Visual Studio Tools for Docker不用发布也能生成可运行的镜像了，它实时 (JIT) 编译，提高启动性能。而且它只获取了程序运行所需要的文件放到镜像中。</p>
 </blockquote>
-<p>我们生成一个最新的镜像<br>  <img src="http://z-bj.xyz/docker/2019-8-29/4.png" alt></p>
+<p>我们生成一个最新的镜像<br>  <img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512093419945-1046546525.png" alt></p>
 <p>  发现它和microsoft/dotnet:2.1-aspnetcore-runtime镜像一样大，这下满足了，毕竟我们没写什么代码到项目中。</p>
 <hr>
 <h3 id="三、优化Docker镜像的方向"><a href="#三、优化Docker镜像的方向" class="headerlink" title="三、优化Docker镜像的方向"></a>三、优化Docker镜像的方向</h3><blockquote>
@@ -352,13 +352,13 @@ ENTRYPOINT [&quot;dotnet&quot;, &quot;API.dll&quot;]</code></pre><p>它分为四
                   <div class="reward-box">
                     
                     <div class="reward-box-item">
-                      <img class="reward-img" src="http://z-bj.xyz/pay/alipay.JPG">
+                      <img class="reward-img" src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512095104135-208398265.jpg">
                       <span class="reward-type">支付宝</span>
                     </div>
                     
                     
                     <div class="reward-box-item">
-                      <img class="reward-img" src="http://z-bj.xyz/pay/wechatpay.JPG">
+                      <img class="reward-img" src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512095140614-1169016399.jpg">
                       <span class="reward-type">微信</span>
                     </div>
                     

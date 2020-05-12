@@ -16,14 +16,14 @@
 <meta property="og:site_name" content="烟花易冷的博客">
 <meta property="og:description" content="线程实现模型线程实现模型主要分为：用户级线程模型，内核级线程模型和两级线程模型。他们的区别在于线程与内核线程之间的对应关系。">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="http://z-bj.xyz/goroutine/2019-9-11/1.png">
-<meta property="og:image" content="http://z-bj.xyz/goroutine/2019-9-11/2.png">
-<meta property="og:image" content="http://z-bj.xyz/goroutine/2019-9-11/3.png">
-<meta property="og:updated_time" content="2019-12-12T07:48:37.924Z">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512094624436-1426857745.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512094646292-107659118.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512094707165-1822009702.png">
+<meta property="og:updated_time" content="2020-05-12T01:47:32.537Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="线程实现模型">
 <meta name="twitter:description" content="线程实现模型线程实现模型主要分为：用户级线程模型，内核级线程模型和两级线程模型。他们的区别在于线程与内核线程之间的对应关系。">
-<meta name="twitter:image" content="http://z-bj.xyz/goroutine/2019-9-11/1.png">
+<meta name="twitter:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512094624436-1426857745.png">
   
     <link rel="alternative" href="/atom.xml" title="烟花易冷的博客" type="application/atom+xml">
   
@@ -52,7 +52,7 @@
 <div class="intrude-less">
 	<header id="header" class="inner">
 		<a href="/" class="profilepic">
-			<img src="http://z-bj.xyz/avatar.png" class="js-avatar">
+			<img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512091351305-571849635.png" class="js-avatar">
 		</a>
 		<hgroup>
 		  <h1 class="header-author"><a href="/">烟花易冷</a></h1>
@@ -110,7 +110,7 @@
 	<div class="intrude-less">
 		<header id="header" class="inner">
 			<div class="profilepic">
-				<img src="http://z-bj.xyz/avatar.png" class="js-avatar">
+				<img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512091351305-571849635.png" class="js-avatar">
 			</div>
 			<hgroup>
 			  <h1 class="header-author js-header-author">烟花易冷</h1>
@@ -184,9 +184,9 @@
         <h3 id="线程实现模型"><a href="#线程实现模型" class="headerlink" title="线程实现模型"></a>线程实现模型</h3><p>线程实现模型主要分为：<code>用户级线程模型</code>，<code>内核级线程模型</code>和<code>两级线程模型</code>。他们的区别在于线程与内核线程之间的对应关系。</p>
 <a id="more"></a>
 <p>以下我们将分析这三种线程实现模型的特点：</p>
-<h4 id="用户级线程模型"><a href="#用户级线程模型" class="headerlink" title="用户级线程模型"></a>用户级线程模型</h4><p>（1）多对一关系<br>用户级线程模型为多对一关系。即，一个进程中的所有线程对应一个内核线程；<br>（2）处理速度快、移植性强；<br>线程的创建、调度、同步等操作由应用程序来处理，不需要让CPU从用户态切换到内核态。所以用户级线程模型在速度快，且移植性强；<br>（3）并非真正的并发运行<br>如果线程IO操作过程中被阻塞，那么用户空间的其他线程都会被阻塞，因为这些线程无法被内核调度。<br><img src="http://z-bj.xyz/goroutine/2019-9-11/1.png" alt="enter image description here"></p>
-<h4 id="内核级线程模型"><a href="#内核级线程模型" class="headerlink" title="内核级线程模型"></a>内核级线程模型</h4><p>（1）一对一关系<br>内核级线程模型为一对一关系，一个用户线程对应一个内核线程；<br>（2）资源消耗较大，速度较慢<br>进程对线程的创建、终止、切换和同步都必须通过内核提供的系统调用来完成，对内核的调度的调度器造成很大的负担；<br>（3）是真正的并发运行<br>用户线程和内核线程是一对一的关系，线程由内核来管理和调度。当某一线程阻塞时候，不会影响到其他线程。<br><img src="http://z-bj.xyz/goroutine/2019-9-11/2.png" alt="enter image description here"></p>
-<h4 id="两级线程模型"><a href="#两级线程模型" class="headerlink" title="两级线程模型"></a>两级线程模型</h4><p>（1）多对多的关系<br>两级线程模型是集前面两种模型的优点而设计的，是多对多的关系；<br>（2）资源消耗较小，速度较快，是真正的并发运行<br>两级线程模型中，一个进程对应多个内核线程，进程中的线程由程序管理和调度并通过映射关系映射到内核线程上。这样即便有线程阻塞后，也不会影响到其他线程；<br>（3）实现的复杂度大<br>用户线程与内核线程的映射关系需要程序来实现，实现的复杂度大。幸运的是，Golang为我们实现了两级线程模型，这使得它在处理并发问题上更有优势。<br><img src="http://z-bj.xyz/goroutine/2019-9-11/3.png" alt="enter image description here"></p>
+<h4 id="用户级线程模型"><a href="#用户级线程模型" class="headerlink" title="用户级线程模型"></a>用户级线程模型</h4><p>（1）多对一关系<br>用户级线程模型为多对一关系。即，一个进程中的所有线程对应一个内核线程；<br>（2）处理速度快、移植性强；<br>线程的创建、调度、同步等操作由应用程序来处理，不需要让CPU从用户态切换到内核态。所以用户级线程模型在速度快，且移植性强；<br>（3）并非真正的并发运行<br>如果线程IO操作过程中被阻塞，那么用户空间的其他线程都会被阻塞，因为这些线程无法被内核调度。<br><img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512094624436-1426857745.png" alt="enter image description here"></p>
+<h4 id="内核级线程模型"><a href="#内核级线程模型" class="headerlink" title="内核级线程模型"></a>内核级线程模型</h4><p>（1）一对一关系<br>内核级线程模型为一对一关系，一个用户线程对应一个内核线程；<br>（2）资源消耗较大，速度较慢<br>进程对线程的创建、终止、切换和同步都必须通过内核提供的系统调用来完成，对内核的调度的调度器造成很大的负担；<br>（3）是真正的并发运行<br>用户线程和内核线程是一对一的关系，线程由内核来管理和调度。当某一线程阻塞时候，不会影响到其他线程。<br><img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512094646292-107659118.png" alt="enter image description here"></p>
+<h4 id="两级线程模型"><a href="#两级线程模型" class="headerlink" title="两级线程模型"></a>两级线程模型</h4><p>（1）多对多的关系<br>两级线程模型是集前面两种模型的优点而设计的，是多对多的关系；<br>（2）资源消耗较小，速度较快，是真正的并发运行<br>两级线程模型中，一个进程对应多个内核线程，进程中的线程由程序管理和调度并通过映射关系映射到内核线程上。这样即便有线程阻塞后，也不会影响到其他线程；<br>（3）实现的复杂度大<br>用户线程与内核线程的映射关系需要程序来实现，实现的复杂度大。幸运的是，Golang为我们实现了两级线程模型，这使得它在处理并发问题上更有优势。<br><img src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512094707165-1822009702.png" alt="enter image description here"></p>
 
       
 
@@ -204,13 +204,13 @@
                   <div class="reward-box">
                     
                     <div class="reward-box-item">
-                      <img class="reward-img" src="http://z-bj.xyz/pay/alipay.JPG">
+                      <img class="reward-img" src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512095104135-208398265.jpg">
                       <span class="reward-type">支付宝</span>
                     </div>
                     
                     
                     <div class="reward-box-item">
-                      <img class="reward-img" src="http://z-bj.xyz/pay/wechatpay.JPG">
+                      <img class="reward-img" src="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200512095140614-1169016399.jpg">
                       <span class="reward-type">微信</span>
                     </div>
                     
