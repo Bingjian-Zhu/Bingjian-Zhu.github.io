@@ -31,7 +31,7 @@
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200518202655967-135791051.png">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200518202700598-298101288.png">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200518202703530-602882933.png">
-<meta property="og:updated_time" content="2020-05-18T12:33:47.122Z">
+<meta property="og:updated_time" content="2020-05-18T12:35:57.678Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="gRPC负载均衡（客户端负载均衡）">
 <meta name="twitter:description" content="前言上篇介绍了如何使用etcd实现服务发现，本篇将基于etcd的服务发现前提下，介绍如何实现gRPC客户端负载均衡。">
@@ -266,6 +266,7 @@
 <p>可以看到，gRPC客户端负载均衡运行良好。</p>
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>本文介绍了gRPC客户端负载均衡的实现，它简单实现了gRPC负载均衡的功能。但在对接其他语言时候比较麻烦，需要每种语言都实现一套服务发现和负载策略，且如果要较为复杂的负载策略，需要修改客户端代码才能完成。</p>
 <p>下篇将介绍如何实现官方推荐的负载均衡策略（<code>External Load Balancing Service</code>）。</p>
+<p>源码地址：<a href="https://github.com/Bingjian-Zhu/etcd-example" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/etcd-example</a></p>
 <p>参考：</p>
 <ul>
 <li><p><a href="https://segmentfault.com/a/1190000008672912" target="_blank" rel="noopener">https://segmentfault.com/a/1190000008672912</a></p>

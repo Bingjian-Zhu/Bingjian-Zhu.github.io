@@ -17,7 +17,7 @@
 <meta property="og:description" content="前言etcd环境安装与使用文章中介绍了etcd的安装及v3 API使用，本篇将介绍如何使用etcd实现服务发现功能。">
 <meta property="og:locale" content="en">
 <meta property="og:image" content="https://img2020.cnblogs.com/blog/1508611/202005/1508611-20200514171049345-955603950.png">
-<meta property="og:updated_time" content="2020-05-14T10:51:05.210Z">
+<meta property="og:updated_time" content="2020-05-18T12:35:49.836Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="etcd实现服务发现">
 <meta name="twitter:description" content="前言etcd环境安装与使用文章中介绍了etcd的安装及v3 API使用，本篇将介绍如何使用etcd实现服务发现功能。">
@@ -206,6 +206,7 @@
 
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>基于 Raft 算法的 etcd 天生是一个强一致性高可用的服务存储目录，用户可以在 etcd 中注册服务，并且对注册的服务设置key TTL，定时保持服务的心跳以达到监控健康状态的效果。通过在 etcd 指定的主题下注册的服务也能在对应的主题下查找到。</p>
 <p>为了确保连接，我们可以在每个服务机器上都部署一个 Proxy 模式的 etcd，这样就可以确保能访问 etcd 集群的服务都能互相连接。</p>
+<p>源码地址：<a href="https://github.com/Bingjian-Zhu/etcd-example" target="_blank" rel="noopener">https://github.com/Bingjian-Zhu/etcd-example</a></p>
 <p>参考：</p>
 <ul>
 <li><a href="https://segmentfault.com/a/1190000020944777" target="_blank" rel="noopener">https://segmentfault.com/a/1190000020944777</a></li>
